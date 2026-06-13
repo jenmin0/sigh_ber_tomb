@@ -32,7 +32,9 @@ def init_db():
         guardian_level INTEGER DEFAULT 0,
         lat REAL DEFAULT 0,
         lng REAL DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        shape TEXT DEFAULT 'arch',
+        color TEXT DEFAULT '#c9a874'
     );
 
     CREATE TABLE IF NOT EXISTS items (
