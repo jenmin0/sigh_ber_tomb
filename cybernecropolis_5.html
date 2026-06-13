@@ -101,7 +101,7 @@ body{display:flex;flex-direction:column;font-family:'Space Mono',monospace}
   background:rgba(91,163,245,.9);border:1px solid rgba(158,202,255,.7);
   box-shadow:0 0 8px rgba(91,163,245,.6);
   cursor:pointer;pointer-events:auto;
-  transform:translate(-50%, -50%); /* 修正中心点对齐 */
+  transform:translate(-50%, -50%);
   transition:transform .1s;
 }
 .tk:hover{transform:translate(-50%,-50%) scale(1.6);box-shadow:0 0 12px rgba(91,163,245,.9)}
@@ -228,53 +228,61 @@ body{display:flex;flex-direction:column;font-family:'Space Mono',monospace}
 /* ═══════════════════════════════════════
    CONFIG
 ═══════════════════════════════════════ */
-const GMAPS_KEY = 'AIzaSyAOYLGztedzIG3tDg_RKCwUgLpu56LmSiw'; 
+const GMAPS_KEY = '...'; //replace with your Google Maps API key
 const API_BASE  = 'http://localhost:8000';
 
+const REGION_MAP_CONFIG = {
+  'china': { name: 'China', flag: '🇨🇳' },
+  'usa': { name: 'United States', flag: '🇺🇸' },
+  'japan': { name: 'Japan', flag: '🇯🇵' },
+  'uk': { name: 'United Kingdom', flag: '🇬🇧' },
+  'germany': { name: 'Germany', flag: '🇩🇪' },
+  'france': { name: 'France', flag: '🇫🇷' },
+  'norway': { name: 'Norway', flag: '🇳🇴' },
+  'qinghai': { name: 'China (Qinghai)', flag: '🇨🇳' }
+};
+
 /* ═══════════════════════════════════════
-   MOCK DATA  (used when API is offline)
+   MOCK TOMBS (基于 Area 范围的物理散开算法)
 ═══════════════════════════════════════ */
-const MOCK_REGIONS = [
-  {id:'china-east',   flag:'🇨🇳', name:'China',          lat:35,  lng:105,  tomb_count:3842},
-  {id:'usa-main',     flag:'🇺🇸', name:'United States',  lat:38,  lng:-97,  tomb_count:3201},
-  {id:'japan-main',   flag:'🇯🇵', name:'Japan',          lat:36,  lng:138,  tomb_count:2187},
-  {id:'uk-main',      flag:'🇬🇧', name:'United Kingdom', lat:52,  lng:-1,   tomb_count:1893},
-  {id:'germany-main', flag:'🇩🇪', name:'Germany',        lat:51,  lng:10,   tomb_count:1654},
-  {id:'france-main',  flag:'🇫🇷', name:'France',         lat:46,  lng:2,    tomb_count:1521},
-  {id:'india-main',   flag:'🇮🇳', name:'India',          lat:21,  lng:78,   tomb_count:1388},
-  {id:'brazil-main',  flag:'🇧🇷', name:'Brazil',         lat:-15, lng:-50,  tomb_count:1102},
-  {id:'korea-main',   flag:'🇰🇷', name:'South Korea',    lat:36,  lng:128,  tomb_count:987},
-  {id:'italy-main',   flag:'🇮🇹', name:'Italy',          lat:42,  lng:12,   tomb_count:921},
-  {id:'russia-main',  flag:'🇷🇺', name:'Russia',         lat:60,  lng:90,   tomb_count:876},
-  {id:'spain-main',   flag:'🇪🇸', name:'Spain',          lat:40,  lng:-4,   tomb_count:812},
-  {id:'australia',    flag:'🇦🇺', name:'Australia',      lat:-27, lng:133,  tomb_count:743},
-  {id:'argentina',    flag:'🇦🇷', name:'Argentina',      lat:-34, lng:-64,  tomb_count:687},
-  {id:'qinghai-sky',  flag:'🌄',  name:'Qinghai Sky',    lat:36,  lng:101,  tomb_count:412},
-  {id:'sahara',       flag:'🏜️',  name:'Sahara Desert',  lat:23,  lng:12,   tomb_count:318},
-  {id:'antarctica',   flag:'🧊',  name:'Antarctica',     lat:-82, lng:0,    tomb_count:42},
-];
-const mockTombs = id => {
-  const r = MOCK_REGIONS.find(x=>x.id===id) || {lat:0,lng:0};
-  return Array.from({length:8},(_,i)=>({
-    id:`${id}-t${i}`,
-    name:['Chen Deming','Yamada Ichiro','Élodie Martin','Hans König',
-          'Rosa Bell','Kim Minsu','Omar Akhtar','Ana Souza'][i%8],
-    born:1920+Math.floor(Math.random()*60),
-    died:1980+Math.floor(Math.random()*44),
-    epitaph:'I came, I loved, I left.',
-    lat: r.lat + (Math.random()-.5)*1.5, // 缩小散开半径，避免3D视觉下偏离太远
-    lng: r.lng + (Math.random()-.5)*1.5,
-  }));
+const mockTombs = burialNode => {
+  const centerLng = burialNode.area?.center?.[0] || 0;
+  const centerLat = burialNode.area?.center?.[1] || 0;
+  const radiusInMeters = burialNode.area?.radius || 20000; 
+
+  const latOffsetRange = radiusInMeters / 111000;
+  const lngOffsetRange = radiusInMeters / (111000 * Math.cos(centerLat * Math.PI / 180));
+
+  return Array.from({ length: 12 }, (_, i) => {
+    const angle = Math.random() * Math.PI * 2;
+    const distanceRatio = Math.sqrt(Math.random()); 
+    
+    const finalLat = centerLat + (latOffsetRange * distanceRatio * Math.sin(angle));
+    const finalLng = centerLng + (lngOffsetRange * distanceRatio * Math.cos(angle));
+
+    return {
+      id: `${burialNode.id}-tomb-${i}`,
+      name: ['Chen Deming','Yamada Ichiro','Élodie Martin','Hans König',
+            'Rosa Bell','Kim Minsu','Omar Akhtar','Ana Souza', 'Pixel Ghost', 'Null Pointer'][i % 10],
+      born: 1930 + Math.floor(Math.random() * 50),
+      died: 1990 + Math.floor(Math.random() * 35),
+      type: burialNode.type || "Digital Crypt",
+      bgPreset: burialNode.bgPreset,
+      epitaph: ['System.exit(0);', 'I came, I loved, I uploaded.', 'Connection timed out.', 'Forever in the green cluster.'][i % 4],
+      lat: finalLat,
+      lng: finalLng
+    };
+  });
 };
 
 /* ═══════════════════════════════════════
    STATE
 ═══════════════════════════════════════ */
+let ALL_BURIALS = []; // 修复点：添加显式全局声明，彻底斩断 undefined 报错
 let REGIONS = [], useMock = false, activeId = null;
 let map3d = null, regionMarkers = [], tombMarkers = [];
 let isTilted = false;
 
-// 初始化时，用 JS 填入骨架屏
 function initSkeleton() {
   const el = document.getElementById('sb-list');
   el.innerHTML = `
@@ -292,78 +300,73 @@ function initSkeleton() {
 }
 initSkeleton();
 
-/* ═══════════════════════════════════════
-   STATUS
-═══════════════════════════════════════ */
 function setStatus(s, t){
   document.getElementById('s-dot').className = 'dot ' + s;
   document.getElementById('s-txt').textContent = t;
 }
 
 /* ═══════════════════════════════════════
-   GEOCODING  — enrich missing lat/lng
-═══════════════════════════════════════ */
-const _geo = {};
-async function geocode(name){
-  if(_geo[name]) return _geo[name];
-  try{
-    const r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(name)}&key=${GMAPS_KEY}`);
-    const d = await r.json();
-    if(d.results?.[0]){
-      const l = d.results[0].geometry.location;
-      return _geo[name] = {lat:l.lat, lng:l.lng};
-    }
-  }catch(e){}
-  return null;
-}
-async function enrichGeo(list){
-  await Promise.all(list.map(async r=>{
-    if(r.lat!=null && r.lng!=null) return;
-    const g = await geocode(r.name || r.id);
-    if(g){ r.lat=g.lat; r.lng=g.lng; }
-  }));
-}
-
-/* ═══════════════════════════════════════
-   BACKEND API
+   BACKEND API & DATA AGGREGATION
 ═══════════════════════════════════════ */
 async function fetchRegions(){
-  setStatus('loading','Connecting...');
-  try{
-    const r = await fetch(`${API_BASE}/regions`, {signal:AbortSignal.timeout(4000)});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const d = await r.json();
-    REGIONS = Array.isArray(d) ? d : (d.regions || d);
+  setStatus('loading', 'Scanning Node Networks...');
+  try {
+    const r = await fetch(`${API_BASE}/burials`, {signal: AbortSignal.timeout(4000)});
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    ALL_BURIALS = await r.json();
     useMock = false;
-  }catch(e){
-    REGIONS = MOCK_REGIONS; useMock = true;
-    setStatus('err', 'Demo mode — API offline');
+    setStatus('ok', 'Matrix Synced');
+  } catch(e) {
+    ALL_BURIALS = [
+      { id: "norway-tree", name: "挪威森林 (Norway Forest)", type: "树葬/绿葬 (Tree Burial)", area: { center: [8.4689, 60.4720], radius: 60000 }, description: "将遗体安置在可降解容器中，化作森林养分。在赛博世界中代表存入去中心化绿色服务器。", bgPreset: "rgba(46, 139, 87, 0.15)" },
+      { id: "qinghai-sky", name: "中国青海 (Qinghai, China)", type: "天葬/高空矩阵", area: { center: [96.0786, 35.6526], radius: 50000 }, description: "将数据片段上传至世界屋脊上空的云端广播卫星群。", bgPreset: "rgba(91, 163, 245, 0.15)" },
+      { id: "china-neon", name: "不夜高塔 (Neon Tower)", type: "数位塔葬 (Digital Tower)", area: { center: [121.4737, 31.2304], radius: 15000 }, description: "上海云端矩阵，高频霓虹网络骨灰龛群。", bgPreset: "rgba(255, 0, 128, 0.15)" },
+      { id: "usa-vault", name: "内华达冷库 (Nevada Vault)", type: "密匙晶片 (Crypto Vault)", area: { center: [-116.4194, 38.8026], radius: 40000 }, description: "隐藏在荒漠废土底下的冷存储硬碟群组。", bgPreset: "rgba(128, 128, 128, 0.15)" }
+    ];
+    useMock = true;
+    setStatus('err', 'Demo Mode — Area Grid Active');
   }
-  await enrichGeo(REGIONS);
-  const total = REGIONS.reduce((a,r)=>a+(r.tomb_count||0), 0);
-  if(!useMock) setStatus('ok', `${REGIONS.length} regions · ${total.toLocaleString()} tombs`);
-  document.getElementById('hud-sub').textContent =
-    `${total.toLocaleString()} tombs across ${REGIONS.length} regions`;
+
+  const regionGroups = {};
+  
+  ALL_BURIALS.forEach(b => {
+    const rid = b.id ? b.id.split('-')[0] : 'unknown'; 
+    const lng = b.area?.center?.[0] || 0;
+    const lat = b.area?.center?.[1] || 0;
+
+    if (!regionGroups[rid]) {
+      const cfg = REGION_MAP_CONFIG[rid] || { name: rid.charAt(0).toUpperCase() + rid.slice(1), flag: '🗺️' };
+      regionGroups[rid] = {
+        id: rid, name: cfg.name, flag: cfg.flag,
+        burial_type: b.type || "Sector Hub", description: b.description || "",
+        tomb_count: 0, lat: lat, lng: lng 
+      };
+    }
+    // 修复点：计算时直接加权该社区下的虚拟墓碑散开数（比如每个社区拥有12个子墓碑）
+    regionGroups[rid].tomb_count += 12; 
+  });
+
+  REGIONS = Object.values(regionGroups).sort((a, b) => b.tomb_count - a.tomb_count);
+
+  document.getElementById('hud-sub').textContent = `${REGIONS.length} Active Sectors Synced`;
   buildSidebar(REGIONS);
   if(map3d) plotRegionMarkers();
 }
 
-async function fetchTombs(id){
-  showTombLoading(id);
-  try{
-    const r = await fetch(`${API_BASE}/regions/${id}/tombs`, {signal:AbortSignal.timeout(4000)});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const d = await r.json();
-    const tombs = Array.isArray(d) ? d : (d.tombs || d);
-    await Promise.all(tombs.map(async t=>{
-      if(t.lat==null && t.location){ const g=await geocode(t.location); if(g){t.lat=g.lat;t.lng=g.lng;} }
-    }));
-    renderTombPanel(id, tombs);
-    plotTombMarkers(id, tombs);
-  }catch(e){
-    if(useMock){ const t=mockTombs(id); renderTombPanel(id,t); plotTombMarkers(id,t); }
-    else { document.getElementById('tp-scroll').innerHTML=`<div class="tp-msg" style="color:var(--red)">Error: ${e.message}</div>`; }
-  }
+async function fetchTombs(regionId){
+  showTombLoading(regionId);
+  const sectors = ALL_BURIALS.filter(b => (b.id ? b.id.split('-')[0] : '') === regionId);
+  
+  let simulatedTombs = [];
+  sectors.forEach(sector => {
+    const tombsInSector = mockTombs(sector);
+    simulatedTombs = simulatedTombs.concat(tombsInSector);
+  });
+  
+  setTimeout(() => {
+    renderTombPanel(regionId, simulatedTombs); 
+    plotTombMarkers(regionId, simulatedTombs); 
+  }, 400);
 }
 
 /* ═══════════════════════════════════════
@@ -377,7 +380,6 @@ function buildSidebar(list){
     const pct = Math.round((r.tomb_count||0)/mx*100);
     const d = document.createElement('div');
     d.className='sb-item'; d.dataset.id=r.id;
-    // 升级点：在此处将 burial_type 和简短 description 渲染进侧边栏
     d.innerHTML = `
       <span class="sb-rank">${i+1}</span>
       <span class="sb-flag">${r.flag||'🌍'}</span>
@@ -403,6 +405,7 @@ document.getElementById('sb-search').addEventListener('input', e=>{
   const v = e.target.value.toLowerCase();
   buildSidebar(v ? REGIONS.filter(r=>r.name.toLowerCase().includes(v)||(r.id||'').includes(v)) : REGIONS);
 });
+
 function selectRegion(r, el){
   document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
@@ -423,25 +426,32 @@ function showTombLoading(id){
 }
 function renderTombPanel(id, tombs){
   const r = REGIONS.find(x=>x.id===id);
-  document.getElementById('tp-label').textContent = `${(r?.name||id).toUpperCase()} · ${tombs.length}`;
-  if(!tombs.length){ document.getElementById('tp-scroll').innerHTML='<div class="tp-msg">No tombs found</div>'; return; }
+  // 顶栏显示当前国家的文化档案
+  document.getElementById('tp-label').textContent = `${(r?.name||id).toUpperCase()} · 矩阵文化归档`;
+  
+  if(!tombs.length){ 
+    document.getElementById('tp-scroll').innerHTML='<div class="tp-msg">该空域尚未建立数字信仰矩阵</div>'; 
+    return; 
+  }
+  
+  // 渲染文化列表与逝者比特流
   document.getElementById('tp-scroll').innerHTML = tombs.map(t=>`
     <div class="tp-item" onclick="flyToTomb(${t.lat||0},${t.lng||0})">
       <span class="tp-icon">
-        <svg width="10" height="13" viewBox="0 0 10 13">
-          <rect x="0" y="6" width="10" height="7" rx="1" fill="#2a3a60"/>
-          <path d="M0 6 Q5 0 10 6" fill="#1e2d50"/>
-          <rect x="4" y="1.5" width="2" height="5" fill="#0d1428"/>
-          <rect x="1.5" y="3.5" width="7" height="1.5" fill="#0d1428"/>
+        <svg width="12" height="14" viewBox="0 0 12 14">
+          <rect x="1" y="5" width="10" height="8" fill="none" stroke="var(--accent)" stroke-width="1"/>
+          <circle cx="6" cy="9" r="2" fill="var(--gold)"/>
+          <path d="M2 5 L6 1 L10 5" fill="none" stroke="var(--accent)" stroke-width="1"/>
         </svg>
       </span>
       <div class="tp-info">
-        <div class="tp-name">${t.name||t.id}</div>
-        <div class="tp-meta">${t.born||'?'} – ${t.died||'?'}</div>
-        ${t.epitaph ? `<div class="tp-epi">"${t.epitaph}"</div>` : ''}
+        <div class="tp-name" style="color:var(--accent2); font-weight:bold;">${t.name||t.id}</div>
+        <div style="font-size:8px; color:var(--gold); margin: 2px 0;">仪式形态: ${t.type}</div>
+        ${t.epitaph ? `<div class="tp-epi" style="color:var(--text); font-family:'Space Mono';">"${t.epitaph}"</div>` : ''}
       </div>
     </div>`).join('');
 }
+
 function closeTombPanel(){
   document.getElementById('tomb-panel').classList.remove('open');
   activeId = null;
@@ -450,14 +460,14 @@ function closeTombPanel(){
 }
 
 /* ═══════════════════════════════════════
-   GOOGLE MAPS 3D  INIT
+   GOOGLE MAPS 3D INIT
 ═══════════════════════════════════════ */
 async function initMap(){
   await new Promise((res,rej)=>{
     const s = document.createElement('script');
     s.src = `https://maps.googleapis.com/maps/api/js?key=${GMAPS_KEY}&v=alpha&libraries=maps3d&language=en&region=US`;
     s.onload = res;
-    s.onerror = ()=>rej(new Error('Failed to load Google Maps API. Check your key or network.'));
+    s.onerror = ()=>rej(new Error('Failed to load Google Maps API.'));
     document.head.appendChild(s);
   });
 
@@ -478,7 +488,6 @@ async function initMap(){
   }, {once:true});
   setTimeout(()=>{ document.getElementById('loading').style.display='none'; }, 4000);
 
-  // Controls
   document.getElementById('zin').onclick   = ()=>{ map3d.range = Math.max(400000,  map3d.range * 0.58); };
   document.getElementById('zout').onclick  = ()=>{ map3d.range = Math.min(28000000, map3d.range * 1.62); };
   document.getElementById('zreset').onclick = ()=>{
@@ -525,26 +534,39 @@ async function plotRegionMarkers(){
       <div class="rk-stem"></div>
       <div class="rk-dot"></div>`;
 
+    // 悬浮与离开提示
     html.addEventListener('mouseenter', ev=>showTipRegion(ev,r));
     html.addEventListener('mouseleave', hideTip);
+    
+    // 【核心修复】：点击 3D 气泡时，阻断一切默认弹窗，直接激活你的赛博殡葬文化面板
     html.addEventListener('click', (e)=>{
-      e.stopPropagation();
+      e.preventDefault();   // 阻止默认行为（防止弹出 go to google maps）
+      e.stopPropagation();  // 阻止冒泡到 3D 地图层
+
+      // 1. 联动高亮右侧侧边栏对应的国家
+      document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
       const el = document.querySelector(`.sb-item[data-id="${r.id}"]`);
-      if(el) selectRegion(r, el);
+      if(el) el.classList.add('active');
+
+      // 2. 镜头切近该国家
+      activeId = r.id;
+      document.querySelectorAll('.rk').forEach(m=>m.classList.toggle('active', m.dataset.rid===r.id));
+      flyTo(r.lat, r.lng);
+
+      // 3. 核心：瞬间弹出底部的殡葬文化/墓碑列表！
+      fetchTombs(r.id); 
     });
 
-    // 修复点：高空降到 500 米，避免缩放时视觉漂移
     const marker = new Marker3DElement({
       position: {lat:r.lat, lng:r.lng, altitude:500},
       altitudeMode: 'RELATIVE_TO_GROUND',
-      collisionBehavior: google.maps.CollisionBehavior?.REQUIRED_AND_HIDES_OPTIONAL,
     });
+    
     marker.appendChild(html);
     map3d.appendChild(marker);
     regionMarkers.push(marker);
   });
 }
-
 async function plotTombMarkers(regionId, tombs){
   const {Marker3DElement} = await google.maps.importLibrary('maps3d');
   clearTombMarkers();
@@ -552,6 +574,8 @@ async function plotTombMarkers(regionId, tombs){
     if(t.lat==null || t.lng==null) return;
     const dot = document.createElement('div');
     dot.className = 'tk';
+    dot.style.position = 'absolute'; // 修复点：确保贴地图钉不会因为 3D 模型渲染而错位
+    
     dot.addEventListener('mouseenter', ev=>showTipTomb(ev,t));
     dot.addEventListener('mouseleave', hideTip);
     dot.addEventListener('click', (e)=>{
@@ -559,7 +583,6 @@ async function plotTombMarkers(regionId, tombs){
       flyToTomb(t.lat,t.lng);
     });
     
-    // 修复点：个体墓碑直接贴地（0米），防止缩放到城市级别时浮在天空中
     const marker = new Marker3DElement({
       position: {lat:t.lat, lng:t.lng, altitude:0},
       altitudeMode: 'RELATIVE_TO_GROUND',
@@ -573,9 +596,6 @@ async function plotTombMarkers(regionId, tombs){
 function clearRegionMarkers(){ regionMarkers.forEach(m=>m.remove()); regionMarkers=[]; }
 function clearTombMarkers(){   tombMarkers.forEach(m=>m.remove()); tombMarkers=[]; }
 
-/* ═══════════════════════════════════════
-   CAMERA
-═══════════════════════════════════════ */
 function flyTo(lat, lng){
   if(!map3d) return;
   map3d.flyCameraTo({
@@ -583,11 +603,12 @@ function flyTo(lat, lng){
     durationMilliseconds:1400,
   });
 }
+
 function flyToTomb(lat, lng){
-  if(!map3d||!lat||!lng) return;
+  if(!map3d || !lat || !lng) return;
   map3d.flyCameraTo({
-    endCamera:{ center:{lat, lng, altitude:0}, range:25000, tilt:62, heading:0 }, // 缩放到 25公里 视距更适合看单点
-    durationMilliseconds:1800,
+    endCamera:{ center:{lat, lng, altitude:0}, range:8000, tilt:55, heading:30 },
+    durationMilliseconds:1500,
   });
 }
 
@@ -598,15 +619,16 @@ const tip = document.getElementById('tip');
 function showTipRegion(e, r){
   tip.innerHTML = `
     <b style="color:var(--accent2)">${r.flag||''} ${r.name}</b><br>
-    <span style="color:var(--text2)">Tombs:&nbsp;</span><b style="color:var(--accent)">${(r.tomb_count||0).toLocaleString()}</b><br>
-    <span style="color:var(--muted);font-size:9px">Click to explore →</span>`;
+    <span style="color:var(--text2)">Total Energy:&nbsp;</span><b style="color:var(--accent)">${(r.tomb_count||0).toLocaleString()}</b><br>
+    <span style="color:var(--gold);font-size:9px">Click to sync grid...</span>`;
   positionTip(e);
 }
 function showTipTomb(e, t){
   tip.innerHTML = `
     <b style="color:var(--text)">${t.name||t.id}</b><br>
+    <span style="color:var(--gold)">${t.type}</span><br>
     <span style="color:var(--text2)">${t.born||'?'} – ${t.died||'?'}</span><br>
-    ${t.epitaph ? `<i style="color:var(--text2);font-size:9px">"${t.epitaph}"</i>` : ''}`;
+    ${t.epitaph ? `<i style="color:var(--accent2);font-size:9px">"${t.epitaph}"</i>` : ''}`;
   positionTip(e);
 }
 function positionTip(e){
@@ -621,9 +643,7 @@ function positionTip(e){
 }
 function hideTip(){ tip.style.display='none'; }
 
-/* ═══════════════════════════════════════
-   BOOT
-═══════════════════════════════════════ */
+// 启动
 initMap().catch(err=>{
   document.getElementById('ld-err').textContent = err.message;
   document.getElementById('ld-err').style.display = 'block';
