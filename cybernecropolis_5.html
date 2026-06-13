@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CyberNecropolis · World Map</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#05070f;--s1:#090b16;--s2:#0d1020;--border:#181c32;
+  --accent:#5ba3f5;--accent2:#9ecaff;--gold:#c8902a;--gold2:#e8b848;
+  --red:#d44;--muted:#202840;--text:#a8c0e0;--text2:#344870;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{display:flex;flex-direction:column;font-family:'Space Mono',monospace}
+
+/* ── topbar ── */
+#topbar{
+  height:48px;background:rgba(5,7,15,.97);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;z-index:300;
+  backdrop-filter:blur(12px);
+}
+.tb-logo{
+  font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;
+  color:var(--accent2);letter-spacing:.1em;
+}
+.tb-logo em{color:var(--text2);font-weight:300;font-style:normal}
+.tb-pipe{width:1px;height:20px;background:var(--border)}
+#hud-sub{font-size:10px;color:var(--text2);letter-spacing:.06em}
+#status-wrap{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:9px;color:var(--text2);letter-spacing:.04em}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.dot.ok{background:#3ddc84;box-shadow:0 0 6px #3ddc84}
+.dot.loading{background:var(--gold);box-shadow:0 0 6px var(--gold);animation:blink .8s infinite}
+.dot.err{background:var(--red);box-shadow:0 0 6px var(--red)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+
+/* ── layout ── */
+#main{flex:1;display:flex;overflow:hidden}
+#map-wrap{flex:1;position:relative;overflow:hidden}
+
+/* Google Maps 3D fills the wrap */
+#map3d-container{width:100%;height:100%;position:absolute;inset:0}
+#map3d-container gmp-map-3d{width:100%;height:100%;display:block}
+
+/* ── loading screen ── */
+#loading{
+  position:absolute;inset:0;background:var(--bg);z-index:200;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+}
+.ld-ring{
+  width:44px;height:44px;border-radius:50%;
+  border:2px solid var(--border);border-top-color:var(--accent);
+  animation:spin .9s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ld-title{font-family:'Space Grotesk',sans-serif;font-size:18px;color:var(--accent2);letter-spacing:.12em}
+.ld-sub{font-size:10px;color:var(--text2);letter-spacing:.08em}
+.ld-err{font-size:11px;color:var(--red);max-width:360px;text-align:center;line-height:1.6}
+
+/* ── overlay controls ── */
+#ctrl{
+  position:absolute;bottom:20px;left:20px;z-index:100;
+  display:flex;flex-direction:column;gap:5px;
+}
+.c-btn{
+  width:32px;height:32px;background:rgba(5,7,15,.88);border:1px solid var(--border);
+  color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;border-radius:5px;transition:all .15s;user-select:none;
+  backdrop-filter:blur(8px);
+}
+.c-btn:hover{border-color:var(--accent);color:var(--accent);box-shadow:0 0 10px rgba(91,163,245,.15)}
+.c-btn-label{font-size:9px}
+
+/* ── custom HTML markers ── */
+/* region marker */
+.rk{
+  position:relative;display:flex;flex-direction:column;align-items:center;
+  cursor:pointer;transform:translateY(-100%);
+  filter:drop-shadow(0 3px 10px rgba(0,0,0,.8));
+  transition:filter .15s;pointer-events:auto;
+}
+.rk:hover{filter:drop-shadow(0 3px 16px rgba(91,163,245,.5))}
+.rk.active .rk-card{border-color:var(--gold);background:rgba(20,14,6,.97)}
+.rk.active .rk-dot{background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.rk-card{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(5,7,15,.93);border:1px solid rgba(91,163,245,.35);
+  border-radius:5px;padding:5px 9px;white-space:nowrap;
+  backdrop-filter:blur(6px);
+}
+.rk-icon{flex-shrink:0;line-height:0}
+.rk-name{font-size:9px;color:var(--text);font-family:'Space Mono',monospace;max-width:90px;overflow:hidden;text-overflow:ellipsis}
+.rk-count{font-size:8px;color:var(--accent);margin-left:3px;font-family:'Space Mono',monospace}
+.rk-stem{width:1.5px;height:9px;background:rgba(91,163,245,.35);margin:0 auto}
+.rk-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);margin:0 auto;box-shadow:0 0 6px var(--accent)}
+
+/* individual tomb dot */
+.tk{
+  width:10px;height:10px;border-radius:50%;
+  background:rgba(91,163,245,.9);border:1px solid rgba(158,202,255,.7);
+  box-shadow:0 0 8px rgba(91,163,245,.6);
+  cursor:pointer;pointer-events:auto;
+  transform:translate(-50%, -50%); /* 修正中心点对齐 */
+  transition:transform .1s;
+}
+.tk:hover{transform:translate(-50%,-50%) scale(1.6);box-shadow:0 0 12px rgba(91,163,245,.9)}
+
+/* ── tooltip ── */
+#tip{
+  position:absolute;background:rgba(5,7,15,.97);border:1px solid var(--border);
+  padding:10px 14px;border-radius:6px;font-size:10px;color:var(--text);
+  pointer-events:none;display:none;z-index:150;line-height:1.9;max-width:210px;
+  box-shadow:0 4px 24px rgba(0,0,0,.7);backdrop-filter:blur(8px);
+}
+
+/* ── sidebar ── */
+#sidebar{
+  width:202px;background:rgba(5,7,15,.99);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;z-index:50}
+.sb-head{padding:14px 13px 10px;border-bottom:1px solid var(--border)}
+.sb-label{font-size:9px;color:var(--text2);letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px}
+.sb-search{
+  width:100%;background:var(--s2);border:1px solid var(--border);color:var(--text);
+  font-family:'Space Mono',monospace;font-size:10px;padding:6px 9px;border-radius:4px;outline:none;
+  transition:border-color .15s;
+}
+.sb-search::placeholder{color:var(--text2)}.sb-search:focus{border-color:var(--accent)}
+.sb-list{flex:1;overflow-y:auto;padding:3px 0}
+.sb-list::-webkit-scrollbar{width:2px}.sb-list::-webkit-scrollbar-thumb{background:var(--border)}
+.sb-item{
+  display:flex;align-items:center;padding:6px 12px;gap:6px;cursor:pointer;
+  transition:background .12s;border-left:2px solid transparent;
+}
+.sb-item:hover{background:rgba(91,163,245,.05)}
+.sb-item.active{background:rgba(91,163,245,.1);border-left-color:var(--accent)}
+.sb-rank{font-size:9px;color:var(--text2);width:16px;flex-shrink:0;text-align:right}
+.sb-flag{font-size:13px;flex-shrink:0;width:18px;text-align:center}
+.sb-info{flex:1;min-width:0}
+.sb-name{font-size:10px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-bar-row{display:flex;align-items:center;gap:4px;margin-top:3px}
+.sb-bar-bg{flex:1;height:1.5px;background:var(--border);border-radius:1px;overflow:hidden}
+.sb-bar{height:100%;background:var(--accent);border-radius:1px}
+.sb-cnt{font-size:9px;color:var(--accent2);white-space:nowrap}
+.sb-sep{height:1px;background:var(--border);margin:2px 12px;opacity:.4}
+
+/* ── tomb panel ── */
+#tomb-panel{border-top:1px solid var(--border);max-height:262px;display:none;flex-direction:column}
+#tomb-panel.open{display:flex}
+.tp-head{
+  padding:9px 13px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.tp-label{font-size:9px;color:var(--accent2);letter-spacing:.12em;text-transform:uppercase}
+.tp-close{color:var(--text2);cursor:pointer;font-size:12px;transition:color .12s}
+.tp-close:hover{color:var(--text)}
+.tp-scroll{overflow-y:auto;flex:1}
+.tp-scroll::-webkit-scrollbar{width:2px}.tp-scroll::-webkit-scrollbar-thumb{background:var(--border)}
+.tp-item{
+  display:flex;align-items:flex-start;gap:8px;padding:7px 13px;
+  border-bottom:1px solid rgba(24,28,50,.7);cursor:pointer;transition:background .12s;
+}
+.tp-item:hover{background:rgba(91,163,245,.04)}.tp-item:last-child{border-bottom:none}
+.tp-icon{flex-shrink:0;margin-top:2px;opacity:.65}
+.tp-info{flex:1;min-width:0}
+.tp-name{font-size:10px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tp-meta{font-size:9px;color:var(--text2);margin-top:2px}
+.tp-epi{font-size:9px;color:#283858;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic}
+.tp-msg{padding:16px;text-align:center;font-size:10px;color:var(--text2)}
+
+/* skeleton loader */
+.skel{background:var(--border);border-radius:2px;animation:shimmer 1.3s infinite}
+@keyframes shimmer{0%,100%{opacity:.3}50%{opacity:.7}}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="tb-logo">CYBER<em>NECROPOLIS</em></div>
+  <div class="tb-pipe"></div>
+  <span id="hud-sub">Global Cemetery Network</span>
+  <div id="status-wrap">
+    <div class="dot loading" id="s-dot"></div>
+    <span id="s-txt">Loading Earth</span>
+  </div>
+</div>
+
+<div id="main">
+  <div id="map-wrap">
+
+    <div id="loading">
+      <div class="ld-ring"></div>
+      <div class="ld-title">CYBERNECROPOLIS</div>
+      <div class="ld-sub">Connecting to Earth...</div>
+      <div class="ld-err" id="ld-err" style="display:none"></div>
+    </div>
+
+    <div id="map3d-container"></div>
+
+    <div id="ctrl">
+      <div class="c-btn" id="zin" title="Zoom in">+</div>
+      <div class="c-btn" id="zout" title="Zoom out">−</div>
+      <div class="c-btn" id="zreset" title="Reset view">⟳</div>
+      <div class="c-btn c-btn-label" id="btilt" title="Toggle tilt">3D</div>
+    </div>
+
+    <div id="tip"></div>
+  </div>
+
+  <div id="sidebar">
+    <div class="sb-head">
+      <div class="sb-label">Regions</div>
+      <input class="sb-search" id="sb-search" placeholder="Search regions...">
+    </div>
+    <div class="sb-list" id="sb-list"></div>
+    
+    <div id="tomb-panel">
+      <div class="tp-head">
+        <span class="tp-label" id="tp-label">Tombs</span>
+        <span class="tp-close" onclick="closeTombPanel()">✕</span>
+      </div>
+      <div class="tp-scroll" id="tp-scroll"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════ */
+const GMAPS_KEY = 'AIzaSyAOYLGztedzIG3tDg_RKCwUgLpu56LmSiw'; 
+const API_BASE  = 'http://localhost:8000';
+
+/* ═══════════════════════════════════════
+   MOCK DATA  (used when API is offline)
+═══════════════════════════════════════ */
+const MOCK_REGIONS = [
+  {id:'china-east',   flag:'🇨🇳', name:'China',          lat:35,  lng:105,  tomb_count:3842},
+  {id:'usa-main',     flag:'🇺🇸', name:'United States',  lat:38,  lng:-97,  tomb_count:3201},
+  {id:'japan-main',   flag:'🇯🇵', name:'Japan',          lat:36,  lng:138,  tomb_count:2187},
+  {id:'uk-main',      flag:'🇬🇧', name:'United Kingdom', lat:52,  lng:-1,   tomb_count:1893},
+  {id:'germany-main', flag:'🇩🇪', name:'Germany',        lat:51,  lng:10,   tomb_count:1654},
+  {id:'france-main',  flag:'🇫🇷', name:'France',         lat:46,  lng:2,    tomb_count:1521},
+  {id:'india-main',   flag:'🇮🇳', name:'India',          lat:21,  lng:78,   tomb_count:1388},
+  {id:'brazil-main',  flag:'🇧🇷', name:'Brazil',         lat:-15, lng:-50,  tomb_count:1102},
+  {id:'korea-main',   flag:'🇰🇷', name:'South Korea',    lat:36,  lng:128,  tomb_count:987},
+  {id:'italy-main',   flag:'🇮🇹', name:'Italy',          lat:42,  lng:12,   tomb_count:921},
+  {id:'russia-main',  flag:'🇷🇺', name:'Russia',         lat:60,  lng:90,   tomb_count:876},
+  {id:'spain-main',   flag:'🇪🇸', name:'Spain',          lat:40,  lng:-4,   tomb_count:812},
+  {id:'australia',    flag:'🇦🇺', name:'Australia',      lat:-27, lng:133,  tomb_count:743},
+  {id:'argentina',    flag:'🇦🇷', name:'Argentina',      lat:-34, lng:-64,  tomb_count:687},
+  {id:'qinghai-sky',  flag:'🌄',  name:'Qinghai Sky',    lat:36,  lng:101,  tomb_count:412},
+  {id:'sahara',       flag:'🏜️',  name:'Sahara Desert',  lat:23,  lng:12,   tomb_count:318},
+  {id:'antarctica',   flag:'🧊',  name:'Antarctica',     lat:-82, lng:0,    tomb_count:42},
+];
+const mockTombs = id => {
+  const r = MOCK_REGIONS.find(x=>x.id===id) || {lat:0,lng:0};
+  return Array.from({length:8},(_,i)=>({
+    id:`${id}-t${i}`,
+    name:['Chen Deming','Yamada Ichiro','Élodie Martin','Hans König',
+          'Rosa Bell','Kim Minsu','Omar Akhtar','Ana Souza'][i%8],
+    born:1920+Math.floor(Math.random()*60),
+    died:1980+Math.floor(Math.random()*44),
+    epitaph:'I came, I loved, I left.',
+    lat: r.lat + (Math.random()-.5)*1.5, // 缩小散开半径，避免3D视觉下偏离太远
+    lng: r.lng + (Math.random()-.5)*1.5,
+  }));
+};
+
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+let REGIONS = [], useMock = false, activeId = null;
+let map3d = null, regionMarkers = [], tombMarkers = [];
+let isTilted = false;
+
+// 初始化时，用 JS 填入骨架屏
+function initSkeleton() {
+  const el = document.getElementById('sb-list');
+  el.innerHTML = `
+    <div style="padding:10px 10px;display:flex;flex-direction:column;gap:10px">
+      ${Array.from({length:10},()=>`
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="skel" style="width:14px;height:9px;flex-shrink:0"></div>
+          <div class="skel" style="width:18px;height:18px;border-radius:50%;flex-shrink:0"></div>
+          <div style="flex:1">
+            <div class="skel" style="width:60%;height:9px;margin-bottom:5px"></div>
+            <div class="skel" style="width:88%;height:2px"></div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+initSkeleton();
+
+/* ═══════════════════════════════════════
+   STATUS
+═══════════════════════════════════════ */
+function setStatus(s, t){
+  document.getElementById('s-dot').className = 'dot ' + s;
+  document.getElementById('s-txt').textContent = t;
+}
+
+/* ═══════════════════════════════════════
+   GEOCODING  — enrich missing lat/lng
+═══════════════════════════════════════ */
+const _geo = {};
+async function geocode(name){
+  if(_geo[name]) return _geo[name];
+  try{
+    const r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(name)}&key=${GMAPS_KEY}`);
+    const d = await r.json();
+    if(d.results?.[0]){
+      const l = d.results[0].geometry.location;
+      return _geo[name] = {lat:l.lat, lng:l.lng};
+    }
+  }catch(e){}
+  return null;
+}
+async function enrichGeo(list){
+  await Promise.all(list.map(async r=>{
+    if(r.lat!=null && r.lng!=null) return;
+    const g = await geocode(r.name || r.id);
+    if(g){ r.lat=g.lat; r.lng=g.lng; }
+  }));
+}
+
+/* ═══════════════════════════════════════
+   BACKEND API
+═══════════════════════════════════════ */
+async function fetchRegions(){
+  setStatus('loading','Connecting...');
+  try{
+    const r = await fetch(`${API_BASE}/regions`, {signal:AbortSignal.timeout(4000)});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    REGIONS = Array.isArray(d) ? d : (d.regions || d);
+    useMock = false;
+  }catch(e){
+    REGIONS = MOCK_REGIONS; useMock = true;
+    setStatus('err', 'Demo mode — API offline');
+  }
+  await enrichGeo(REGIONS);
+  const total = REGIONS.reduce((a,r)=>a+(r.tomb_count||0), 0);
+  if(!useMock) setStatus('ok', `${REGIONS.length} regions · ${total.toLocaleString()} tombs`);
+  document.getElementById('hud-sub').textContent =
+    `${total.toLocaleString()} tombs across ${REGIONS.length} regions`;
+  buildSidebar(REGIONS);
+  if(map3d) plotRegionMarkers();
+}
+
+async function fetchTombs(id){
+  showTombLoading(id);
+  try{
+    const r = await fetch(`${API_BASE}/regions/${id}/tombs`, {signal:AbortSignal.timeout(4000)});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    const tombs = Array.isArray(d) ? d : (d.tombs || d);
+    await Promise.all(tombs.map(async t=>{
+      if(t.lat==null && t.location){ const g=await geocode(t.location); if(g){t.lat=g.lat;t.lng=g.lng;} }
+    }));
+    renderTombPanel(id, tombs);
+    plotTombMarkers(id, tombs);
+  }catch(e){
+    if(useMock){ const t=mockTombs(id); renderTombPanel(id,t); plotTombMarkers(id,t); }
+    else { document.getElementById('tp-scroll').innerHTML=`<div class="tp-msg" style="color:var(--red)">Error: ${e.message}</div>`; }
+  }
+}
+
+/* ═══════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════ */
+function buildSidebar(list){
+  const mx = Math.max(...list.map(r=>r.tomb_count||0), 1);
+  const el = document.getElementById('sb-list');
+  el.innerHTML = '';
+  list.forEach((r,i)=>{
+    const pct = Math.round((r.tomb_count||0)/mx*100);
+    const d = document.createElement('div');
+    d.className='sb-item'; d.dataset.id=r.id;
+    // 升级点：在此处将 burial_type 和简短 description 渲染进侧边栏
+    d.innerHTML = `
+      <span class="sb-rank">${i+1}</span>
+      <span class="sb-flag">${r.flag||'🌍'}</span>
+      <div class="sb-info">
+        <div class="sb-name" style="font-weight:600; color:var(--accent2);">${r.name}</div>
+        <div style="font-size:9px; color:var(--gold); margin-top:2px;">${r.burial_type || ''}</div>
+        <div class="sb-bar-row">
+          <div class="sb-bar-bg"><div class="sb-bar" style="width:${pct}%"></div></div>
+          <span class="sb-cnt">${(r.tomb_count||0).toLocaleString()}</span>
+        </div>
+        <div style="font-size:8px; color:var(--text2); line-height:1.3; margin-top:4px; white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+          ${r.description || ''}
+        </div>
+      </div>`;
+    d.onclick = ()=>selectRegion(r, d);
+    el.appendChild(d);
+    if((i+1)%5===0 && i<list.length-1){
+      const sep=document.createElement('div'); sep.className='sb-sep'; el.appendChild(sep);
+    }
+  });
+}
+document.getElementById('sb-search').addEventListener('input', e=>{
+  const v = e.target.value.toLowerCase();
+  buildSidebar(v ? REGIONS.filter(r=>r.name.toLowerCase().includes(v)||(r.id||'').includes(v)) : REGIONS);
+});
+function selectRegion(r, el){
+  document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  activeId = r.id;
+  document.querySelectorAll('.rk').forEach(m=>m.classList.toggle('active', m.dataset.rid===r.id));
+  flyTo(r.lat, r.lng);
+  fetchTombs(r.id);
+}
+
+/* ═══════════════════════════════════════
+   TOMB PANEL
+═══════════════════════════════════════ */
+function showTombLoading(id){
+  const r = REGIONS.find(x=>x.id===id);
+  document.getElementById('tp-label').textContent = (r?.name||id).toUpperCase();
+  document.getElementById('tp-scroll').innerHTML = '<div class="tp-msg">Loading tombs...</div>';
+  document.getElementById('tomb-panel').classList.add('open');
+}
+function renderTombPanel(id, tombs){
+  const r = REGIONS.find(x=>x.id===id);
+  document.getElementById('tp-label').textContent = `${(r?.name||id).toUpperCase()} · ${tombs.length}`;
+  if(!tombs.length){ document.getElementById('tp-scroll').innerHTML='<div class="tp-msg">No tombs found</div>'; return; }
+  document.getElementById('tp-scroll').innerHTML = tombs.map(t=>`
+    <div class="tp-item" onclick="flyToTomb(${t.lat||0},${t.lng||0})">
+      <span class="tp-icon">
+        <svg width="10" height="13" viewBox="0 0 10 13">
+          <rect x="0" y="6" width="10" height="7" rx="1" fill="#2a3a60"/>
+          <path d="M0 6 Q5 0 10 6" fill="#1e2d50"/>
+          <rect x="4" y="1.5" width="2" height="5" fill="#0d1428"/>
+          <rect x="1.5" y="3.5" width="7" height="1.5" fill="#0d1428"/>
+        </svg>
+      </span>
+      <div class="tp-info">
+        <div class="tp-name">${t.name||t.id}</div>
+        <div class="tp-meta">${t.born||'?'} – ${t.died||'?'}</div>
+        ${t.epitaph ? `<div class="tp-epi">"${t.epitaph}"</div>` : ''}
+      </div>
+    </div>`).join('');
+}
+function closeTombPanel(){
+  document.getElementById('tomb-panel').classList.remove('open');
+  activeId = null;
+  document.querySelectorAll('.sb-item,.rk').forEach(x=>x.classList.remove('active'));
+  clearTombMarkers();
+}
+
+/* ═══════════════════════════════════════
+   GOOGLE MAPS 3D  INIT
+═══════════════════════════════════════ */
+async function initMap(){
+  await new Promise((res,rej)=>{
+    const s = document.createElement('script');
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${GMAPS_KEY}&v=alpha&libraries=maps3d&language=en&region=US`;
+    s.onload = res;
+    s.onerror = ()=>rej(new Error('Failed to load Google Maps API. Check your key or network.'));
+    document.head.appendChild(s);
+  });
+
+  const { Map3DElement, MapMode } = await google.maps.importLibrary('maps3d');
+
+  map3d = new Map3DElement({
+    mode:    MapMode.HYBRID,
+    center:  {lat:22, lng:12, altitude:0},
+    tilt:    0,
+    range:   20000000,
+    heading: 0,
+  });
+
+  document.getElementById('map3d-container').appendChild(map3d);
+
+  map3d.addEventListener('gmp-steadychange', ()=>{
+    document.getElementById('loading').style.display = 'none';
+  }, {once:true});
+  setTimeout(()=>{ document.getElementById('loading').style.display='none'; }, 4000);
+
+  // Controls
+  document.getElementById('zin').onclick   = ()=>{ map3d.range = Math.max(400000,  map3d.range * 0.58); };
+  document.getElementById('zout').onclick  = ()=>{ map3d.range = Math.min(28000000, map3d.range * 1.62); };
+  document.getElementById('zreset').onclick = ()=>{
+    map3d.flyCameraTo({
+      endCamera:{ center:{lat:22,lng:12,altitude:0}, range:20000000, tilt:0, heading:0 },
+      durationMilliseconds:1200,
+    });
+    isTilted=false; document.getElementById('btilt').style.color='';
+  };
+  document.getElementById('btilt').onclick = ()=>{
+    isTilted = !isTilted;
+    map3d.tilt = isTilted ? 58 : 0;
+    document.getElementById('btilt').style.color = isTilted ? 'var(--accent)' : '';
+  };
+
+  await fetchRegions();
+}
+
+/* ═══════════════════════════════════════
+   CUSTOM HTML MARKERS
+═══════════════════════════════════════ */
+async function plotRegionMarkers(){
+  const {Marker3DElement} = await google.maps.importLibrary('maps3d');
+  clearRegionMarkers();
+  REGIONS.forEach(r=>{
+    if(r.lat==null || r.lng==null) return;
+
+    const html = document.createElement('div');
+    html.className = 'rk';
+    html.dataset.rid = r.id;
+    html.innerHTML = `
+      <div class="rk-card">
+        <span class="rk-icon">
+          <svg width="10" height="12" viewBox="0 0 10 12">
+            <rect x="0" y="5" width="10" height="7" rx="1" fill="#5ba3f5" opacity=".9"/>
+            <path d="M0 5 Q5 0 10 5" fill="#9ecaff" opacity=".85"/>
+            <rect x="4" y="1" width="2" height="5" fill="rgba(0,0,0,.45)"/>
+            <rect x="1" y="3" width="8" height="1.5" fill="rgba(0,0,0,.45)"/>
+          </svg>
+        </span>
+        <span class="rk-name">${r.name}</span>
+        <span class="rk-count">${(r.tomb_count||0).toLocaleString()}</span>
+      </div>
+      <div class="rk-stem"></div>
+      <div class="rk-dot"></div>`;
+
+    html.addEventListener('mouseenter', ev=>showTipRegion(ev,r));
+    html.addEventListener('mouseleave', hideTip);
+    html.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const el = document.querySelector(`.sb-item[data-id="${r.id}"]`);
+      if(el) selectRegion(r, el);
+    });
+
+    // 修复点：高空降到 500 米，避免缩放时视觉漂移
+    const marker = new Marker3DElement({
+      position: {lat:r.lat, lng:r.lng, altitude:500},
+      altitudeMode: 'RELATIVE_TO_GROUND',
+      collisionBehavior: google.maps.CollisionBehavior?.REQUIRED_AND_HIDES_OPTIONAL,
+    });
+    marker.appendChild(html);
+    map3d.appendChild(marker);
+    regionMarkers.push(marker);
+  });
+}
+
+async function plotTombMarkers(regionId, tombs){
+  const {Marker3DElement} = await google.maps.importLibrary('maps3d');
+  clearTombMarkers();
+  tombs.forEach(t=>{
+    if(t.lat==null || t.lng==null) return;
+    const dot = document.createElement('div');
+    dot.className = 'tk';
+    dot.addEventListener('mouseenter', ev=>showTipTomb(ev,t));
+    dot.addEventListener('mouseleave', hideTip);
+    dot.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      flyToTomb(t.lat,t.lng);
+    });
+    
+    // 修复点：个体墓碑直接贴地（0米），防止缩放到城市级别时浮在天空中
+    const marker = new Marker3DElement({
+      position: {lat:t.lat, lng:t.lng, altitude:0},
+      altitudeMode: 'RELATIVE_TO_GROUND',
+    });
+    marker.appendChild(dot);
+    map3d.appendChild(marker);
+    tombMarkers.push(marker);
+  });
+}
+
+function clearRegionMarkers(){ regionMarkers.forEach(m=>m.remove()); regionMarkers=[]; }
+function clearTombMarkers(){   tombMarkers.forEach(m=>m.remove()); tombMarkers=[]; }
+
+/* ═══════════════════════════════════════
+   CAMERA
+═══════════════════════════════════════ */
+function flyTo(lat, lng){
+  if(!map3d) return;
+  map3d.flyCameraTo({
+    endCamera:{ center:{lat, lng, altitude:0}, range:3800000, tilt:52, heading:0 },
+    durationMilliseconds:1400,
+  });
+}
+function flyToTomb(lat, lng){
+  if(!map3d||!lat||!lng) return;
+  map3d.flyCameraTo({
+    endCamera:{ center:{lat, lng, altitude:0}, range:25000, tilt:62, heading:0 }, // 缩放到 25公里 视距更适合看单点
+    durationMilliseconds:1800,
+  });
+}
+
+/* ═══════════════════════════════════════
+   TOOLTIP
+═══════════════════════════════════════ */
+const tip = document.getElementById('tip');
+function showTipRegion(e, r){
+  tip.innerHTML = `
+    <b style="color:var(--accent2)">${r.flag||''} ${r.name}</b><br>
+    <span style="color:var(--text2)">Tombs:&nbsp;</span><b style="color:var(--accent)">${(r.tomb_count||0).toLocaleString()}</b><br>
+    <span style="color:var(--muted);font-size:9px">Click to explore →</span>`;
+  positionTip(e);
+}
+function showTipTomb(e, t){
+  tip.innerHTML = `
+    <b style="color:var(--text)">${t.name||t.id}</b><br>
+    <span style="color:var(--text2)">${t.born||'?'} – ${t.died||'?'}</span><br>
+    ${t.epitaph ? `<i style="color:var(--text2);font-size:9px">"${t.epitaph}"</i>` : ''}`;
+  positionTip(e);
+}
+function positionTip(e){
+  const mwr = document.getElementById('map-wrap').getBoundingClientRect();
+  let x = e.clientX - mwr.left + 14;
+  let y = e.clientY - mwr.top  - 14;
+  if(x + 220 > mwr.width)  x = e.clientX - mwr.left - 220;
+  if(y + 100 > mwr.height) y = e.clientY - mwr.top  - 100;
+  tip.style.left = Math.max(4,x) + 'px';
+  tip.style.top  = Math.max(4,y) + 'px';
+  tip.style.display = 'block';
+}
+function hideTip(){ tip.style.display='none'; }
+
+/* ═══════════════════════════════════════
+   BOOT
+═══════════════════════════════════════ */
+initMap().catch(err=>{
+  document.getElementById('ld-err').textContent = err.message;
+  document.getElementById('ld-err').style.display = 'block';
+  document.querySelector('.ld-ring').style.display = 'none';
+  setStatus('err','Map failed to load');
+});
+</script>
+</body>
+</html>
