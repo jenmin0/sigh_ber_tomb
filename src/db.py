@@ -40,33 +40,24 @@ def get_tomb_items(tomb_id: int):
         return [dict(r) for r in rows]
     
 
-
-def create_user_with_tomb(username: str, password: str, region_id: str, display_name: str, epitaph: str):
-    """注册即建墓碑，原子操作"""
+def create_user_with_tomb(username: str, password: str, region_id: str, display_name: str, epitaph: str, lat: float = 0.0, lng: float = 0.0):
     password_hash = hashlib.sha256(password.encode()).hexdigest()
-    
     with get_conn() as conn:
         try:
-            # 先建用户
             cursor = conn.execute(
                 "INSERT INTO users (username, password_hash) VALUES (?, ?)",
                 (username, password_hash)
             )
             user_id = cursor.lastrowid
-            
-            # 同时建墓碑
             cursor2 = conn.execute(
-                "INSERT INTO tombs (user_id, region_id, display_name, epitaph) VALUES (?, ?, ?, ?)",
-                (user_id, region_id, display_name, epitaph)
+                "INSERT INTO tombs (user_id, region_id, display_name, epitaph, lat, lng) VALUES (?, ?, ?, ?, ?, ?)",
+                (user_id, region_id, display_name, epitaph, lat, lng)
             )
             tomb_id = cursor2.lastrowid
-            
             conn.commit()
             return {"user_id": user_id, "tomb_id": tomb_id}
-        
         except sqlite3.IntegrityError:
-            return None  # username已存在
-
+            return None
 
 def attempt_steal(thief_id: int, target_tomb_id: int, item_id: int):
     """

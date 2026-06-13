@@ -78,58 +78,17 @@ def regions():
         })
     return result
 
-@app.get("/regions/{region_id}/tombs")
-def tombs(region_id: str):
-    all_r = get_all_regions()
-    region_data = next((x for x in all_r if x["id"] == region_id), None)
-    
-    if not region_data:
-        raise HTTPException(status_code=404, detail="Region not found")
-
-    # === 💡 核心安全兼容逻辑 ===
-    if "coordinates" in region_data and isinstance(region_data["coordinates"], list) and len(region_data["coordinates"]) >= 2:
-        lng = region_data["coordinates"][0]
-        lat = region_data["coordinates"][1]
-    else:
-        lat = region_data.get("coordinates_lat") or region_data.get("lat") or 39.9042
-        lng = region_data.get("coordinates_lng") or region_data.get("lng") or 116.4074
-
-    try:
-        raw = get_tombs_by_region(region_id)
-    except Exception:
-        raw = []
-
-    # 如果数据库无数据，自动生成 8 个充满科技感的赛博墓碑，保证前端展示有东西看
-    if not raw:
-        import random
-        return [
-            {
-                "id": f"{region_id}-mock-{i}",
-                "name": ["CyberNecromancer", "NullPointer_Ghost", "StackOverflow_Soul", "NeonRebel"][i % 4] + f" #{random.randint(100,999)}",
-                "epitaph": ["404 Life Not Found.", "Connection reset by God.", "我将代码留给开源，肉身留给虚无。", "正在尝试重连阳间..."][i % 4],
-                "born": 1990 + i * 2,
-                "died": 2026,
-                # 在核心坐标周围微调散布，不要散得太远
-                "lat": float(lat) + (random.random() - 0.5) * 0.1,
-                "lng": float(lng) + (random.random() - 0.5) * 0.1,
-            }
-            for i in range(8)
-        ]
-
-    result = []
-    for t in raw:
-        result.append({
-            "id": t["id"],
-            "name": t.get("display_name") or t.get("name") or "无名亡魂",
-            "epitaph": t.get("epitaph", ""),
-            "born": t.get("born_year") or t.get("born") or "?",
-            "died": t.get("died_year") or t.get("died") or "?",
-            "lat": float(lat) + (random.random() - 0.5) * 0.1,
-            "lng": float(lng) + (random.random() - 0.5) * 0.1,
-        })
-    return result
-# ----------------- 其余路由保持不变 -----------------
-
+@app.get("/tombs")
+def all_tombs():
+    with get_conn() as conn:
+        rows = conn.execute("""
+            SELECT t.id, t.display_name, t.epitaph, t.lat, t.lng,
+                   t.region_id, u.username, u.is_thief
+            FROM tombs t 
+            LEFT JOIN users u ON t.user_id = u.id
+            WHERE t.lat IS NOT NULL AND t.lng IS NOT NULL
+        """).fetchall()
+        return [dict(r) for r in rows]
 
 @app.get("/tombs/{tomb_id}/items")
 def tomb_items(tomb_id: int):
@@ -142,6 +101,8 @@ class RegisterRequest(BaseModel):
     region_id: str
     display_name: str
     epitaph: str = ""
+    lat: float = 0.0
+    lng: float = 0.0
 
 
 @app.post("/register")
@@ -150,7 +111,7 @@ def register(req: RegisterRequest):
         req.username, req.password, req.region_id, req.display_name, req.epitaph
     )
     if result is None:
-        return {"error": "用户名已存在"}
+        return {"error": "Username already exists"}
     return result
 
 

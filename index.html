@@ -5,75 +5,192 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cyber Cemetery · World Map</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
+  /* 基础核心配色 */
   --bg:#04060f;--s1:#0a0d1a;--s2:#111425;--bd:#1a1e35;
   --gold:#c9a84c;--gold2:#e8d08a;--text:#c0bedd;--text2:#6a7090;--muted:#3a4060;
+
+  /* ✨ 新增：地图指定配色 */
+  --ocean:#8cb2c8;
+  --land:#decdac;
+
+  --h1:32px;--h2:24px;--sub:20px;--b1:16px;--b2:12px;
+  --lh:1.5;
+  --font:'Helvetica Neue',Helvetica,Arial,sans-serif;
 }
 html,body{height:100%;overflow:hidden;background:var(--bg)}
-body{display:flex;flex-direction:column;font-family:'Share Tech Mono',monospace}
+body{display:flex;flex-direction:column;font-family:var(--font)}
+
+.hl1{font-size:var(--h1);font-weight:700;line-height:var(--lh);letter-spacing:-.01em}
+.hl2{font-size:var(--h2);font-weight:700;line-height:var(--lh);letter-spacing:-.01em}
+.sub{font-size:var(--sub);font-weight:400;line-height:var(--lh)}
+.b1{font-size:var(--b1);font-weight:400;line-height:var(--lh)}
+.b2{font-size:var(--b2);font-weight:400;line-height:var(--lh)}
+
 #wr{flex:1;background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow:hidden}
-#topbar{height:38px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0}
-.tb-t{font-size:12px;color:var(--gold2);letter-spacing:.12em}
-#status{font-size:9px;color:var(--muted);margin-left:auto;letter-spacing:.06em}
+
+#topbar{
+  height:48px;background:var(--s1);border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0
+}
+.tb-t{font-size:var(--b1);font-weight:700;color:var(--gold2);letter-spacing:.08em}
+.tb-sub{font-size:var(--b2);color:var(--muted);letter-spacing:.04em}
+#status{font-size:var(--b2);color:var(--muted);margin-left:auto;letter-spacing:.04em}
+
 #body{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
 #map-area{flex:1;position:relative;min-height:0}
 #map-area svg{width:100%;height:100%;display:block}
-.country{stroke:#1a2040;stroke-width:.4px;cursor:pointer;transition:fill .15s}
-.country.normal{fill:#1a2540}
-.country.has-culture{fill:#2a2010}
-.country.hovered{fill:#2a3060}
-.country.has-culture.hovered{fill:rgba(201,168,76,.25);stroke:#c9a84c;stroke-width:.8px}
-.country.pin-mode{cursor:crosshair}
-#tip{position:absolute;background:rgba(10,13,26,.95);border:1px solid var(--gold);padding:5px 12px;border-radius:16px;font-size:10px;color:var(--gold2);pointer-events:none;opacity:0;transition:opacity .15s;white-space:nowrap;letter-spacing:.06em;top:10px;left:50%;transform:translateX(-50%)}
+
+/* ✨ 地图元素样式调整 */
+/* ---- 地图元素样式修复 ---- */
+.country {
+  stroke: #5a5040;          /* 基础国界线：深棕色 */
+  stroke-width: .4px;
+  cursor: pointer;
+  transition: fill .15s;
+}
+
+/* 1. 普通没有文化的大陆：干净的浅米色 de_cd_ac */
+.country.normal {
+  fill: #decdac;
+}
+
+/* 2. 拥有特定殡葬文化的大陆：带有一点历史厚重感的特定暖橙色/暗金色 */
+.country.has-culture {
+  fill: #cd9a62;            /* ✨ 这里调成了更明显的文化橙/古铜色 */
+  stroke: #a0703d;          /* 边界线也稍微加深，使其更立体 */
+  stroke-width: .6px;
+}
+
+/* 3. 鼠标悬浮在普通大陆上的颜色 */
+.country.hovered {
+  fill: #ebdcb2;
+}
+
+/* 4. 鼠标悬浮在有文化的大陆上：高亮闪烁成更明亮的金橙色 */
+.country.has-culture.hovered {
+  fill: #e0b382;
+  stroke: var(--gold);
+  stroke-width: .8px;
+}
+
+.country.pin-mode {
+  cursor: crosshair;
+}
+
+#tip{
+  position:absolute;background:rgba(10,13,26,.95);border:1px solid var(--gold);
+  padding:6px 16px;border-radius:20px;font-size:var(--b2);color:var(--gold2);
+  pointer-events:none;opacity:0;transition:opacity .15s;white-space:nowrap;
+  letter-spacing:.04em;top:12px;left:50%;transform:translateX(-50%)
+}
 #tip.show{opacity:1}
-#pin-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,13,26,.96);border:1px solid var(--gold);border-radius:8px;padding:14px 18px;text-align:center;font-size:11px;color:var(--text);line-height:1.9;display:none;pointer-events:none;z-index:10}
+
+#pin-hint{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(10,13,26,.96);border:1px solid var(--gold);border-radius:8px;
+  padding:20px 24px;text-align:center;color:var(--text);line-height:1.6;
+  display:none;pointer-events:none;z-index:10
+}
 #pin-hint.show{display:block}
-.ph-t{font-size:13px;color:var(--gold2);margin-bottom:4px}
-#cards-bar{background:rgba(4,6,15,.96);border-top:1px solid var(--bd);padding:10px 12px;display:none;flex-direction:column;gap:8px;flex-shrink:0}
+.ph-t{font-size:var(--b1);font-weight:700;color:var(--gold2);margin-bottom:8px}
+.ph-b{font-size:var(--b2);color:var(--text2)}
+
+#cards-bar{
+  background:rgba(4,6,15,.96);border-top:1px solid var(--bd);
+  padding:12px 16px;display:none;flex-direction:column;gap:8px;flex-shrink:0
+}
 #cards-bar.show{display:flex}
-.bar-lbl{font-size:9px;color:var(--muted);letter-spacing:.1em}
-#cards-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.bar-lbl{font-size:var(--b2);color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+#cards-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
 #cards-scroll::-webkit-scrollbar{height:2px}
 #cards-scroll::-webkit-scrollbar-thumb{background:var(--bd)}
-.card{flex-shrink:0;width:160px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;cursor:pointer;transition:border-color .2s}
+
+.card{
+  flex-shrink:0;width:180px;background:var(--s2);border:1px solid var(--bd);
+  border-radius:8px;padding:12px;cursor:pointer;transition:border-color .2s
+}
 .card:hover,.card.sel{border-color:var(--gold)}
 .card.sel{background:rgba(201,168,76,.07)}
-.card-type{font-size:9px;color:var(--gold);letter-spacing:.06em;margin-bottom:3px}
-.card-name{font-size:11px;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-desc{font-size:9px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-#detail{position:absolute;inset:0;background:rgba(4,6,15,.97);display:none;flex-direction:column;padding:18px;gap:12px;overflow-y:auto;z-index:20}
+.card-type{font-size:var(--b2);color:var(--gold);letter-spacing:.06em;margin-bottom:4px;text-transform:uppercase}
+.card-name{font-size:var(--b1);font-weight:700;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-desc{font-size:var(--b2);color:var(--text2);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+#detail{
+  position:absolute;inset:0;background:rgba(4,6,15,.97);display:none;
+  flex-direction:column;padding:24px;gap:16px;overflow-y:auto;z-index:20
+}
 #detail.show{display:flex}
-.det-close{align-self:flex-end;color:var(--muted);cursor:pointer;font-size:11px;letter-spacing:.06em}
+.det-close{
+  align-self:flex-end;color:var(--muted);cursor:pointer;
+  font-size:var(--b2);letter-spacing:.06em
+}
 .det-close:hover{color:var(--text)}
-.det-type{font-size:9px;color:var(--gold);letter-spacing:.1em}
-.det-name{font-size:17px;color:var(--gold2);letter-spacing:.06em}
-.det-region{font-size:10px;color:var(--text2);margin-bottom:8px}
-.det-desc{font-size:12px;color:var(--text);line-height:1.9;border-left:2px solid var(--muted);padding-left:12px}
-.det-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
-.det-tag{font-size:9px;color:var(--text2);border:1px solid var(--bd);border-radius:10px;padding:2px 8px}
-.det-btn{margin-top:auto;background:var(--gold);color:#000;border:none;padding:10px 18px;font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:700;border-radius:6px;cursor:pointer;align-self:flex-start}
+.det-type{font-size:var(--b2);color:var(--gold);letter-spacing:.1em;text-transform:uppercase}
+.det-name{font-size:var(--h2);font-weight:700;color:var(--gold2);letter-spacing:-.01em}
+.det-region{font-size:var(--b2);color:var(--text2);margin-top:-8px}
+.det-desc{
+  font-size:var(--b1);color:var(--text);line-height:1.8;
+  border-left:2px solid var(--muted);padding-left:16px
+}
+.det-tags{display:flex;gap:8px;flex-wrap:wrap}
+.det-tag{
+  font-size:var(--b2);color:var(--text2);border:1px solid var(--bd);
+  border-radius:12px;padding:4px 12px
+}
+.det-btn{
+  margin-top:auto;background:var(--gold);color:#000;border:none;
+  padding:12px 20px;font-family:var(--font);font-size:var(--b1);font-weight:700;
+  border-radius:6px;cursor:pointer;align-self:flex-start;letter-spacing:.02em
+}
 .det-btn:hover{background:var(--gold2)}
-#form-ov{position:absolute;inset:0;background:rgba(4,6,15,.97);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;z-index:20}
+
+#form-ov{
+  position:absolute;inset:0;background:rgba(4,6,15,.97);display:none;
+  flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;padding:24px;z-index:20
+}
 #form-ov.show{display:flex}
-.fo-title{font-size:15px;color:var(--gold2);letter-spacing:.08em}
-.coord-badge{font-size:9px;color:var(--gold);border:1px solid rgba(201,168,76,.35);border-radius:10px;padding:3px 10px}
-.fo-hint{font-size:10px;color:var(--text2);text-align:center;line-height:1.7;max-width:300px}
-.fg{display:flex;flex-direction:column;gap:4px;width:100%;max-width:310px}
-.fl{font-size:9px;color:var(--muted);letter-spacing:.1em}
-.fi{background:var(--s2);border:1px solid var(--bd);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:12px;padding:8px 11px;border-radius:5px;outline:none;width:100%}
+.fo-title{font-size:var(--h2);font-weight:700;color:var(--gold2);letter-spacing:-.01em}
+.coord-badge{
+  font-size:var(--b2);color:var(--gold);
+  border:1px solid rgba(201,168,76,.35);border-radius:12px;padding:4px 16px
+}
+.fo-hint{font-size:var(--b2);color:var(--text2);text-align:center;line-height:1.7;max-width:320px}
+
+.fg{display:flex;flex-direction:column;gap:4px;width:100%;max-width:320px}
+.fl{font-size:var(--b2);color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.fi{
+  background:var(--s2);border:1px solid var(--bd);color:var(--text);
+  font-family:var(--font);font-size:var(--b1);padding:10px 12px;
+  border-radius:6px;outline:none;width:100%
+}
 .fi:focus{border-color:var(--gold)}
-.frow{display:flex;gap:8px;width:100%;max-width:310px}
-.fbtn{flex:1;padding:10px;font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:700;border:none;border-radius:5px;cursor:pointer}
+.fi::placeholder{color:var(--muted)}
+
+.frow{display:flex;gap:8px;width:100%;max-width:320px}
+.fbtn{
+  flex:1;padding:12px;font-family:var(--font);font-size:var(--b2);
+  font-weight:700;border:none;border-radius:6px;cursor:pointer;letter-spacing:.02em
+}
 .fbtn.p{background:var(--gold);color:#000}.fbtn.p:hover{background:var(--gold2)}
 .fbtn.c{background:transparent;color:var(--muted);border:1px solid var(--bd)}.fbtn.c:hover{color:var(--text)}
-#succ{position:absolute;inset:0;background:rgba(4,6,15,.97);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;z-index:20}
+
+#succ{
+  position:absolute;inset:0;background:rgba(4,6,15,.97);display:none;
+  flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;text-align:center;padding:24px;z-index:20
+}
 #succ.show{display:flex}
-.succ-icon{font-size:28px;color:var(--gold2)}
-.succ-title{font-size:15px;color:var(--gold2);letter-spacing:.08em}
-.succ-sub{font-size:11px;color:var(--text2);line-height:1.9;max-width:280px}
-.succ-btn{background:transparent;color:var(--muted);border:1px solid var(--bd);padding:8px 18px;font-family:'Share Tech Mono',monospace;font-size:11px;border-radius:5px;cursor:pointer;margin-top:6px}
+.succ-icon{font-size:40px;color:var(--gold2)}
+.succ-title{font-size:var(--h2);font-weight:700;color:var(--gold2);letter-spacing:-.01em}
+.succ-sub{font-size:var(--b1);color:var(--text2);line-height:1.8;max-width:320px}
+.succ-btn{
+  background:transparent;color:var(--muted);border:1px solid var(--bd);
+  padding:10px 24px;font-family:var(--font);font-size:var(--b2);
+  border-radius:6px;cursor:pointer;margin-top:8px;letter-spacing:.04em
+}
 .succ-btn:hover{color:var(--text)}
 </style>
 </head>
@@ -81,7 +198,7 @@ body{display:flex;flex-direction:column;font-family:'Share Tech Mono',monospace}
 <div id="wr">
   <div id="topbar">
     <span class="tb-t">Cyber Cemetery</span>
-    <span style="font-size:9px;color:var(--muted)">— World Burial Culture Map —</span>
+    <span class="tb-sub">— World Burial Culture Map —</span>
     <span id="status">Loading map...</span>
   </div>
   <div id="body">
@@ -89,7 +206,7 @@ body{display:flex;flex-direction:column;font-family:'Share Tech Mono',monospace}
       <div id="tip"></div>
       <div id="pin-hint">
         <div class="ph-t">Choose Your Resting Place</div>
-        Click anywhere on the map<br>to place your tomb at this coordinate
+        <div class="ph-b">Click anywhere on the map<br>to place your tomb at this coordinate</div>
       </div>
       <div id="detail">
         <span class="det-close" onclick="closeDetail()">✕ Close</span>
@@ -135,6 +252,56 @@ const API_BASE = 'http://localhost:8000';
 let CULTURES = [];
 let CULTURE_ISO = new Set();
 let ISO_CULTURES = {};
+let tombMarks = [];
+
+// 核心状态管理，加入 isLocked 逻辑
+let state = { mode: 'explore', hoveredIso: null, selCulture: null, pinCoords: null, hoveredCountryName: '', isLocked: false };
+
+async function loadAndRenderTombs() {
+  try {
+    const res = await fetch(`${API_BASE}/tombs`);
+    const tombs = await res.json();
+    
+    console.log("从后端接口拿到的原始数据:", tombs); // ✨ 加在这里！
+
+    // 1. 标准的 D3 移除节点方式（如果 tombMarks 存的是选择器）
+    tombMarks.forEach(m => m.remove());
+    tombMarks = [];
+    
+    tombs.forEach(t => {
+      // ✨ 核心修复：显式判断是否为 undefined 或 null 或 NaN，允许 0 和负数坐标通过
+      if (t.lat === undefined || t.lat === null || t.lng === undefined || t.lng === null) return;
+      
+      // 确保是浮点数，防止后端传出字符串导致 D3 投影失败
+      const lat = parseFloat(t.lat);
+      const lng = parseFloat(t.lng);
+      if (isNaN(lat) || isNaN(lng)) return;
+      console.log(`[D3 正在投影] 准备传入的经度(Lng): ${lng}, 纬度(Lat): ${lat}`);
+      const pt = projection([lng, lat]);
+
+      console.log(`[D3 投影结果] 屏幕坐标 pt:`, pt);
+
+      if (!pt) {
+        console.error("❌ 警告：D3 投影直接返回了 null！证明该经纬度无法被当前地图识别或已越界！");
+        return;
+      }
+      
+      const mark = svg.append('g').style('cursor', 'pointer');
+      mark.append('circle')
+        .attr('cx', pt[0]).attr('cy', pt[1]).attr('r', 5)
+        .attr('fill', t.is_thief ? '#c0392b' : '#c9a84c')
+        .attr('stroke', '#04060f').attr('stroke-width', 1);
+        
+      mark.on('mouseover', () => showTip(`⬡ ${t.display_name}${t.epitaph ? ' · ' + t.epitaph : ''}`))
+          .on('mouseout', hideTip);
+          
+      // ✨ 修改点：存储整个 D3 选择器，这样上面调用 m.remove() 时就是标准的 D3 移除
+      tombMarks.push(mark); 
+    });
+  } catch(e) {
+    console.warn('Failed to load tombs', e);
+  }
+}
 
 async function loadCultures() {
   try {
@@ -152,20 +319,19 @@ async function loadCultures() {
   });
 }
 
-let state = { mode: 'explore', hoveredIso: null, selCulture: null, pinCoords: null, hoveredCountryName: '' };
-
 const tip = document.getElementById('tip');
 function showTip(txt) { tip.textContent = txt; tip.classList.add('show'); }
 function hideTip() { tip.classList.remove('show'); }
 function setStatus(txt) { document.getElementById('status').textContent = txt; }
 
 let projection, pathGen, svg, g, pinMark;
+let pinHintTimeout = null;
 
 loadCultures().then(() => {
   d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world => {
     const mapEl = document.getElementById('map-area');
     const W = mapEl.clientWidth || window.innerWidth;
-    const H = mapEl.clientHeight || window.innerHeight - 38;
+    const H = mapEl.clientHeight || window.innerHeight - 48;
 
     projection = d3.geoNaturalEarth1()
       .scale(W / 6.2)
@@ -177,20 +343,21 @@ loadCultures().then(() => {
       .attr('preserveAspectRatio', 'xMidYMid meet')
       .style('width', '100%').style('height', '100%');
 
-    svg.append('rect').attr('width', W).attr('height', H).attr('fill', '#04060f');
+    // ✨ 修改点：地球画布底层色统一为海洋色 #8cb2c8
+    svg.append('rect').attr('width', W).attr('height', H).attr('fill', '#8cb2c8');
 
     svg.append('path')
       .datum({ type: 'Sphere' })
       .attr('d', pathGen)
-      .attr('fill', '#080e1e')
-      .attr('stroke', '#1a2040')
+      .attr('fill', '#8cb2c8') // ✨ 海洋色
+      .attr('stroke', '#4a6b82')
       .attr('stroke-width', .5);
 
     svg.append('path')
       .datum(d3.geoGraticule()())
       .attr('d', pathGen)
       .attr('fill', 'none')
-      .attr('stroke', 'rgba(26,30,64,0.4)')
+      .attr('stroke', 'rgba(255,255,255,0.25)')
       .attr('stroke-width', .3);
 
     g = svg.append('g');
@@ -214,35 +381,55 @@ loadCultures().then(() => {
         const name = d.properties?.name || iso;
         state.hoveredCountryName = name;
         showTip(name + (cultures.length ? ' · ' + cultures.map(c => c.type).join(' / ') : ''));
-        if (state.mode === 'explore') showCards(name, cultures);
+        
+        // ✨ 修改点：如果交互锁定，则悬浮时不更新下方卡片栏
+        if (state.mode === 'explore' && !state.isLocked) showCards(name, cultures);
       })
       .on('mouseout', function () {
         if (!['explore', 'pin'].includes(state.mode)) return;
         d3.select(this).classed('hovered', false);
         state.hoveredIso = null;
         hideTip();
-      })
-      .on('click', function (event, d) {
-        if (state.mode !== 'pin') return;
-        const [svgX, svgY] = d3.pointer(event, svg.node());
-        const coords = projection.invert([svgX, svgY]);
-        if (!coords) return;
-        state.pinCoords = { lng: coords[0], lat: coords[1] };
-        drawPin(coords[0], coords[1]);
-        showForm(coords[0], coords[1]);
       });
 
+    // ✨ 核心重构：将点击逻辑完全收拢到全局 SVG 上，精确分流陆地、海洋以及 Pin 逻辑
     svg.on('click', function (event) {
-      if (state.mode !== 'pin') return;
       const [svgX, svgY] = d3.pointer(event, svg.node());
       const coords = projection.invert([svgX, svgY]);
       if (!coords) return;
-      state.pinCoords = { lng: coords[0], lat: coords[1] };
-      drawPin(coords[0], coords[1]);
-      showForm(coords[0], coords[1]);
+
+      // 1. 如果是在确定坐标的 Pin 模式下
+      if (state.mode === 'pin') {
+        state.pinCoords = { lng: coords[0], lat: coords[1] };
+        drawPin(coords[0], coords[1]);
+        showForm(coords[0], coords[1]);
+        return;
+      }
+
+      // 2. 如果是在浏览/选择文化的普通模式下
+      if (state.mode === 'explore') {
+        const target = event.target;
+        const isCountry = target.classList.contains('country');
+
+        if (isCountry) {
+          // 点在大陆上：锁定当前大洲文化
+          state.isLocked = true;
+          const d = d3.select(target).datum();
+          const iso = d.id ? String(d.id) : '';
+          const cultures = ISO_CULTURES[iso] || [];
+          const name = d.properties?.name || iso;
+          showCards(name, cultures);
+        } else {
+          // 点在海洋上：锁定并强制弹出海葬选项
+          state.isLocked = true;
+          state.hoveredCountryName = "The Open Ocean";
+          showOceanCards();
+        }
+      }
     });
 
     setStatus('Hover over a country to explore burial traditions');
+    loadAndRenderTombs();
   }).catch(() => { setStatus('Map failed to load — check network'); });
 });
 
@@ -250,7 +437,7 @@ function drawPin(lng, lat) {
   if (pinMark) pinMark.remove();
   const [px, py] = projection([lng, lat]);
   pinMark = svg.append('g');
-  pinMark.append('circle').attr('cx', px).attr('cy', py).attr('r', 7)
+  pinMark.append('circle').attr('cx', px).attr('cy', py).attr('r', 8)
     .attr('fill', 'rgba(201,168,76,.2)').attr('stroke', '#c9a84c').attr('stroke-width', 1);
   pinMark.append('circle').attr('cx', px).attr('cy', py).attr('r', 3)
     .attr('fill', '#e8d08a');
@@ -273,9 +460,39 @@ function showCards(countryName, cultures) {
       </div>`).join('') + defaultCard;
   document.getElementById('cards-bar').classList.add('show');
 }
+
+// ✨ 新增函数：展示海洋专属的海葬卡片
+function showOceanCards() {
+  document.getElementById('bar-lbl').textContent = 'The Open Ocean · Burial Traditions';
+  const oceanCard = `
+    <div class="card" id="card-__ocean__" onclick="selectCard('__ocean__')">
+      <div class="card-type">Ocean Burial</div>
+      <div class="card-name">Eternal Voyage</div>
+      <div class="card-desc">Rest in the deep, blue cyber ocean. Your spirit drifts infinitely with the digital tides.</div>
+    </div>`;
+  document.getElementById('cards-scroll').innerHTML = oceanCard;
+  document.getElementById('cards-bar').classList.add('show');
+}
+
 function hideCards() { document.getElementById('cards-bar').classList.remove('show'); }
 
 function selectCard(id) {
+  // ✨ 新增海葬卡片选择处理机制
+  if (id === '__ocean__') {
+    state.selCulture = {
+      id: 'ocean',
+      type: 'Ocean Burial',
+      name: 'Eternal Voyage',
+      country: 'The Open Ocean',
+      description: 'Resting in the deep, silent digital ocean, drifting freely with worldwide network currents.'
+    };
+    document.querySelectorAll('.card').forEach(el => el.classList.remove('sel'));
+    const el = document.getElementById('card-__ocean__');
+    if (el) el.classList.add('sel');
+    showDetail(state.selCulture);
+    return;
+  }
+
   if (id === '__free__') {
     state.selCulture = {
       id: 'free',
@@ -305,17 +522,40 @@ function showDetail(c) {
   document.getElementById('det-tags').innerHTML = '';
   document.getElementById('detail').classList.add('show');
 }
-function closeDetail() { document.getElementById('detail').classList.remove('show'); state.mode = 'explore'; }
+
+// ✨ 修改点：关闭详情、取消、重置时，统一将 state.isLocked 设为 false 重新激活鼠标悬浮切换
+function closeDetail() { 
+  document.getElementById('detail').classList.remove('show'); 
+  state.mode = 'explore'; 
+  state.isLocked = false; 
+}
 
 function startPin() {
   closeDetail(); hideCards();
   state.mode = 'pin';
   setStatus('Click anywhere on the map to place your tomb');
-  document.getElementById('pin-hint').classList.add('show');
+  
+  const pinHint = document.getElementById('pin-hint');
+  pinHint.classList.add('show');
+  
   if (g) g.selectAll('.country').classed('pin-mode', true);
+
+  // ✨ 新增逻辑：如果之前有未执行完的定时器，先清除它
+  if (pinHintTimeout) clearTimeout(pinHintTimeout);
+
+  // ✨ 新增逻辑：停留 2000 毫秒（2秒）后自动移除 show 类名以消失
+  pinHintTimeout = setTimeout(() => {
+    pinHint.classList.remove('show');
+  }, 2000);
 }
 
 function showForm(lng, lat) {
+  // ✨ 新增：用户一旦点击落针，立刻清除 2 秒定时器，防止干扰后续表单操作
+  if (pinHintTimeout) {
+    clearTimeout(pinHintTimeout);
+    pinHintTimeout = null;
+  }
+
   document.getElementById('pin-hint').classList.remove('show');
   document.getElementById('f-coord').textContent = `${lat.toFixed(3)}°  ${lng.toFixed(3)}°`;
   document.getElementById('f-hint').textContent = state.selCulture
@@ -328,29 +568,69 @@ function showForm(lng, lat) {
 function cancelForm() {
   document.getElementById('form-ov').classList.remove('show');
   state.mode = 'explore'; state.pinCoords = null;
+  state.isLocked = false; 
   setStatus('Hover over a country to explore burial traditions');
   if (g) g.selectAll('.country').classed('pin-mode', false);
 }
 
 async function submitTomb() {
+  console.log("🚀 开始准备提交墓碑数据...");
+  
   const u = document.getElementById('f-u').value.trim();
   const p = document.getElementById('f-p').value.trim();
   const d = document.getElementById('f-d').value.trim();
   const e = document.getElementById('f-e').value.trim();
-  if (!u || !p || !d) { alert('Please fill in username, password and tomb name'); return; }
+  
+  if (!u || !p || !d) { 
+    alert('Please fill in username, password and tomb name'); 
+    return; 
+  }
+  
   const region_id = state.selCulture?.id || 'free';
+  
+  // ✨ 核心诊断 1：看看前端打包的坐标长什么样
+  const payload = {
+    username: u, password: p, region_id,
+    display_name: d, epitaph: e,
+    lat: state.pinCoords?.lat || 0,
+    lng: state.pinCoords?.lng || 0
+  };
+  console.log("📦 前端准备发送给后端的 JSON 数据:", payload);
+
   try {
     const res = await fetch(`${API_BASE}/register`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: u, password: p, region_id, display_name: d, epitaph: e })
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
+    
+    console.log(`📡 后端注册接口响应状态码: ${res.status} ${res.statusText}`);
+    
+    // ✨ 核心诊断 2：如果后端拒绝了请求（比如返回 400, 422, 500 等）
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("❌ 后端拒绝了保存请求！错误详情:", errorText);
+      alert(`建立失败！后端返回错误码: ${res.status}。请看 F12 控制台详情。`);
+      return;
+    }
+
     const data = await res.json();
-    if (data.error) { alert(data.error); return; }
+    console.log("📥 后端成功处理并返回的数据:", data);
+
+    if (data.error) { 
+      alert("后端业务逻辑阻断: " + data.error); 
+      return; 
+    }
+    
+    // 只有真正写入成功，才走成功流程
     document.getElementById('form-ov').classList.remove('show');
     showSuccess(d, e);
-  } catch {
-    document.getElementById('form-ov').classList.remove('show');
-    showSuccess(d, e);
+    loadAndRenderTombs();
+    
+  } catch (err) {
+    // 真正的网络崩溃或代码中断拦截
+    console.error("🔴 提交墓碑时发生网络或脚本崩溃错误:", err);
+    alert("网络连接失败，请检查后端服务是否正常运行！");
   }
 }
 
@@ -368,6 +648,7 @@ function resetAll() {
   document.getElementById('succ').classList.remove('show');
   ['f-u', 'f-p', 'f-d', 'f-e'].forEach(id => document.getElementById(id).value = '');
   state.mode = 'explore'; state.selCulture = null; state.pinCoords = null;
+  state.isLocked = false; 
   if (pinMark) { pinMark.remove(); pinMark = null; }
   if (g) g.selectAll('.country').classed('pin-mode', false);
   setStatus('Hover over a country to explore burial traditions');
