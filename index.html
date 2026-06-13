@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber Cemetery · World Map</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#04060f;--s1:#0a0d1a;--s2:#111425;--bd:#1a1e35;
+  --gold:#c9a84c;--gold2:#e8d08a;--text:#c0bedd;--text2:#6a7090;--muted:#3a4060;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{display:flex;flex-direction:column;font-family:'Share Tech Mono',monospace}
+#wr{flex:1;background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow:hidden}
+#topbar{height:38px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0}
+.tb-t{font-size:12px;color:var(--gold2);letter-spacing:.12em}
+#status{font-size:9px;color:var(--muted);margin-left:auto;letter-spacing:.06em}
+#body{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+#map-area{flex:1;position:relative;min-height:0}
+#map-area svg{width:100%;height:100%;display:block}
+.country{stroke:#1a2040;stroke-width:.4px;cursor:pointer;transition:fill .15s}
+.country.normal{fill:#1a2540}
+.country.has-culture{fill:#2a2010}
+.country.hovered{fill:#2a3060}
+.country.has-culture.hovered{fill:rgba(201,168,76,.25);stroke:#c9a84c;stroke-width:.8px}
+.country.pin-mode{cursor:crosshair}
+#tip{position:absolute;background:rgba(10,13,26,.95);border:1px solid var(--gold);padding:5px 12px;border-radius:16px;font-size:10px;color:var(--gold2);pointer-events:none;opacity:0;transition:opacity .15s;white-space:nowrap;letter-spacing:.06em;top:10px;left:50%;transform:translateX(-50%)}
+#tip.show{opacity:1}
+#pin-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,13,26,.96);border:1px solid var(--gold);border-radius:8px;padding:14px 18px;text-align:center;font-size:11px;color:var(--text);line-height:1.9;display:none;pointer-events:none;z-index:10}
+#pin-hint.show{display:block}
+.ph-t{font-size:13px;color:var(--gold2);margin-bottom:4px}
+#cards-bar{background:rgba(4,6,15,.96);border-top:1px solid var(--bd);padding:10px 12px;display:none;flex-direction:column;gap:8px;flex-shrink:0}
+#cards-bar.show{display:flex}
+.bar-lbl{font-size:9px;color:var(--muted);letter-spacing:.1em}
+#cards-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+#cards-scroll::-webkit-scrollbar{height:2px}
+#cards-scroll::-webkit-scrollbar-thumb{background:var(--bd)}
+.card{flex-shrink:0;width:160px;background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;cursor:pointer;transition:border-color .2s}
+.card:hover,.card.sel{border-color:var(--gold)}
+.card.sel{background:rgba(201,168,76,.07)}
+.card-type{font-size:9px;color:var(--gold);letter-spacing:.06em;margin-bottom:3px}
+.card-name{font-size:11px;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-desc{font-size:9px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#detail{position:absolute;inset:0;background:rgba(4,6,15,.97);display:none;flex-direction:column;padding:18px;gap:12px;overflow-y:auto;z-index:20}
+#detail.show{display:flex}
+.det-close{align-self:flex-end;color:var(--muted);cursor:pointer;font-size:11px;letter-spacing:.06em}
+.det-close:hover{color:var(--text)}
+.det-type{font-size:9px;color:var(--gold);letter-spacing:.1em}
+.det-name{font-size:17px;color:var(--gold2);letter-spacing:.06em}
+.det-region{font-size:10px;color:var(--text2);margin-bottom:8px}
+.det-desc{font-size:12px;color:var(--text);line-height:1.9;border-left:2px solid var(--muted);padding-left:12px}
+.det-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.det-tag{font-size:9px;color:var(--text2);border:1px solid var(--bd);border-radius:10px;padding:2px 8px}
+.det-btn{margin-top:auto;background:var(--gold);color:#000;border:none;padding:10px 18px;font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:700;border-radius:6px;cursor:pointer;align-self:flex-start}
+.det-btn:hover{background:var(--gold2)}
+#form-ov{position:absolute;inset:0;background:rgba(4,6,15,.97);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;z-index:20}
+#form-ov.show{display:flex}
+.fo-title{font-size:15px;color:var(--gold2);letter-spacing:.08em}
+.coord-badge{font-size:9px;color:var(--gold);border:1px solid rgba(201,168,76,.35);border-radius:10px;padding:3px 10px}
+.fo-hint{font-size:10px;color:var(--text2);text-align:center;line-height:1.7;max-width:300px}
+.fg{display:flex;flex-direction:column;gap:4px;width:100%;max-width:310px}
+.fl{font-size:9px;color:var(--muted);letter-spacing:.1em}
+.fi{background:var(--s2);border:1px solid var(--bd);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:12px;padding:8px 11px;border-radius:5px;outline:none;width:100%}
+.fi:focus{border-color:var(--gold)}
+.frow{display:flex;gap:8px;width:100%;max-width:310px}
+.fbtn{flex:1;padding:10px;font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:700;border:none;border-radius:5px;cursor:pointer}
+.fbtn.p{background:var(--gold);color:#000}.fbtn.p:hover{background:var(--gold2)}
+.fbtn.c{background:transparent;color:var(--muted);border:1px solid var(--bd)}.fbtn.c:hover{color:var(--text)}
+#succ{position:absolute;inset:0;background:rgba(4,6,15,.97);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;z-index:20}
+#succ.show{display:flex}
+.succ-icon{font-size:28px;color:var(--gold2)}
+.succ-title{font-size:15px;color:var(--gold2);letter-spacing:.08em}
+.succ-sub{font-size:11px;color:var(--text2);line-height:1.9;max-width:280px}
+.succ-btn{background:transparent;color:var(--muted);border:1px solid var(--bd);padding:8px 18px;font-family:'Share Tech Mono',monospace;font-size:11px;border-radius:5px;cursor:pointer;margin-top:6px}
+.succ-btn:hover{color:var(--text)}
+</style>
+</head>
+<body>
+<div id="wr">
+  <div id="topbar">
+    <span class="tb-t">Cyber Cemetery</span>
+    <span style="font-size:9px;color:var(--muted)">— World Burial Culture Map —</span>
+    <span id="status">Loading map...</span>
+  </div>
+  <div id="body">
+    <div id="map-area">
+      <div id="tip"></div>
+      <div id="pin-hint">
+        <div class="ph-t">Choose Your Resting Place</div>
+        Click anywhere on the map<br>to place your tomb at this coordinate
+      </div>
+      <div id="detail">
+        <span class="det-close" onclick="closeDetail()">✕ Close</span>
+        <div class="det-type" id="det-type"></div>
+        <div class="det-name" id="det-name"></div>
+        <div class="det-region" id="det-region"></div>
+        <div class="det-desc" id="det-desc"></div>
+        <div class="det-tags" id="det-tags"></div>
+        <button class="det-btn" onclick="startPin()">Choose this tradition & place on map →</button>
+      </div>
+      <div id="form-ov">
+        <div class="fo-title">Establish Your Tomb</div>
+        <div class="coord-badge" id="f-coord"></div>
+        <div class="fo-hint" id="f-hint"></div>
+        <div class="fg"><div class="fl">Username</div><input class="fi" id="f-u" placeholder="Your cyber identity"></div>
+        <div class="fg"><div class="fl">Password</div><input class="fi" id="f-p" type="password" placeholder="••••••"></div>
+        <div class="fg"><div class="fl">Tomb Name</div><input class="fi" id="f-d" placeholder="Name of the departed"></div>
+        <div class="fg"><div class="fl">Epitaph</div><input class="fi" id="f-e" placeholder="I was here. I loved. I faded."></div>
+        <div class="frow">
+          <button class="fbtn c" onclick="cancelForm()">Cancel</button>
+          <button class="fbtn p" onclick="submitTomb()">Establish Tomb →</button>
+        </div>
+      </div>
+      <div id="succ">
+        <div class="succ-icon">⬡</div>
+        <div class="succ-title">Tomb Established</div>
+        <div class="succ-sub" id="succ-sub"></div>
+        <button class="succ-btn" onclick="resetAll()">Continue Exploring</button>
+      </div>
+    </div>
+    <div id="cards-bar">
+      <div class="bar-lbl" id="bar-lbl">Burial Traditions</div>
+      <div id="cards-scroll"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+const API_BASE = 'http://localhost:8000';
+
+let CULTURES = [];
+let CULTURE_ISO = new Set();
+let ISO_CULTURES = {};
+
+async function loadCultures() {
+  try {
+    const res = await fetch(`${API_BASE}/burial-cultures`);
+    CULTURES = await res.json();
+  } catch {
+    console.warn('Failed to load burial_data.json, using empty data');
+    CULTURES = [];
+  }
+  CULTURE_ISO = new Set(CULTURES.map(c => c.iso));
+  ISO_CULTURES = {};
+  CULTURES.forEach(c => {
+    if (!ISO_CULTURES[c.iso]) ISO_CULTURES[c.iso] = [];
+    ISO_CULTURES[c.iso].push(c);
+  });
+}
+
+let state = { mode: 'explore', hoveredIso: null, selCulture: null, pinCoords: null, hoveredCountryName: '' };
+
+const tip = document.getElementById('tip');
+function showTip(txt) { tip.textContent = txt; tip.classList.add('show'); }
+function hideTip() { tip.classList.remove('show'); }
+function setStatus(txt) { document.getElementById('status').textContent = txt; }
+
+let projection, pathGen, svg, g, pinMark;
+
+loadCultures().then(() => {
+  d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world => {
+    const mapEl = document.getElementById('map-area');
+    const W = mapEl.clientWidth || window.innerWidth;
+    const H = mapEl.clientHeight || window.innerHeight - 38;
+
+    projection = d3.geoNaturalEarth1()
+      .scale(W / 6.2)
+      .translate([W / 2, H / 2]);
+    pathGen = d3.geoPath(projection);
+
+    svg = d3.select('#map-area').append('svg')
+      .attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet')
+      .style('width', '100%').style('height', '100%');
+
+    svg.append('rect').attr('width', W).attr('height', H).attr('fill', '#04060f');
+
+    svg.append('path')
+      .datum({ type: 'Sphere' })
+      .attr('d', pathGen)
+      .attr('fill', '#080e1e')
+      .attr('stroke', '#1a2040')
+      .attr('stroke-width', .5);
+
+    svg.append('path')
+      .datum(d3.geoGraticule()())
+      .attr('d', pathGen)
+      .attr('fill', 'none')
+      .attr('stroke', 'rgba(26,30,64,0.4)')
+      .attr('stroke-width', .3);
+
+    g = svg.append('g');
+
+    const features = topojson.feature(world, world.objects.countries).features;
+
+    g.selectAll('.country')
+      .data(features)
+      .join('path')
+      .attr('class', d => {
+        const iso = d.id ? String(d.id) : '';
+        return 'country ' + (CULTURE_ISO.has(iso) ? 'has-culture' : 'normal');
+      })
+      .attr('d', pathGen)
+      .on('mouseover', function (event, d) {
+        if (['form', 'detail', 'success'].includes(state.mode)) return;
+        const iso = d.id ? String(d.id) : '';
+        state.hoveredIso = iso;
+        d3.select(this).classed('hovered', true);
+        const cultures = ISO_CULTURES[iso] || [];
+        const name = d.properties?.name || iso;
+        state.hoveredCountryName = name;
+        showTip(name + (cultures.length ? ' · ' + cultures.map(c => c.type).join(' / ') : ''));
+        if (state.mode === 'explore') showCards(name, cultures);
+      })
+      .on('mouseout', function () {
+        if (!['explore', 'pin'].includes(state.mode)) return;
+        d3.select(this).classed('hovered', false);
+        state.hoveredIso = null;
+        hideTip();
+      })
+      .on('click', function (event, d) {
+        if (state.mode !== 'pin') return;
+        const [svgX, svgY] = d3.pointer(event, svg.node());
+        const coords = projection.invert([svgX, svgY]);
+        if (!coords) return;
+        state.pinCoords = { lng: coords[0], lat: coords[1] };
+        drawPin(coords[0], coords[1]);
+        showForm(coords[0], coords[1]);
+      });
+
+    svg.on('click', function (event) {
+      if (state.mode !== 'pin') return;
+      const [svgX, svgY] = d3.pointer(event, svg.node());
+      const coords = projection.invert([svgX, svgY]);
+      if (!coords) return;
+      state.pinCoords = { lng: coords[0], lat: coords[1] };
+      drawPin(coords[0], coords[1]);
+      showForm(coords[0], coords[1]);
+    });
+
+    setStatus('Hover over a country to explore burial traditions');
+  }).catch(() => { setStatus('Map failed to load — check network'); });
+});
+
+function drawPin(lng, lat) {
+  if (pinMark) pinMark.remove();
+  const [px, py] = projection([lng, lat]);
+  pinMark = svg.append('g');
+  pinMark.append('circle').attr('cx', px).attr('cy', py).attr('r', 7)
+    .attr('fill', 'rgba(201,168,76,.2)').attr('stroke', '#c9a84c').attr('stroke-width', 1);
+  pinMark.append('circle').attr('cx', px).attr('cy', py).attr('r', 3)
+    .attr('fill', '#e8d08a');
+}
+
+function showCards(countryName, cultures) {
+  document.getElementById('bar-lbl').textContent = countryName + ' · Burial Traditions';
+  const defaultCard = `
+    <div class="card" id="card-__free__" onclick="selectCard('__free__')">
+      <div class="card-type">Natural Burial</div>
+      <div class="card-name">${countryName}</div>
+      <div class="card-desc">Unbound by tradition — rest on this land in your own way. Your data, your choice.</div>
+    </div>`;
+  document.getElementById('cards-scroll').innerHTML =
+    cultures.map(c => `
+      <div class="card" id="card-${c.id}" onclick="selectCard('${c.id}')">
+        <div class="card-type">${c.type}</div>
+        <div class="card-name">${c.name}</div>
+        <div class="card-desc">${c.description}</div>
+      </div>`).join('') + defaultCard;
+  document.getElementById('cards-bar').classList.add('show');
+}
+function hideCards() { document.getElementById('cards-bar').classList.remove('show'); }
+
+function selectCard(id) {
+  if (id === '__free__') {
+    state.selCulture = {
+      id: 'free',
+      type: 'Natural Burial',
+      name: 'Eternal Freedom',
+      country: state.hoveredCountryName || '',
+      description: 'Unbound by traditional rituals, resting in eternal peace on this land in your own way.'
+    };
+    document.querySelectorAll('.card').forEach(el => el.classList.remove('sel'));
+    document.getElementById('card-__free__').classList.add('sel');
+    showDetail(state.selCulture);
+    return;
+  }
+  const c = CULTURES.find(x => x.id === id); if (!c) return;
+  state.selCulture = c;
+  document.querySelectorAll('.card').forEach(el => el.classList.remove('sel'));
+  const el = document.getElementById('card-' + id); if (el) el.classList.add('sel');
+  showDetail(c);
+}
+
+function showDetail(c) {
+  state.mode = 'detail';
+  document.getElementById('det-type').textContent = c.type;
+  document.getElementById('det-name').textContent = c.name;
+  document.getElementById('det-region').textContent = c.country;
+  document.getElementById('det-desc').textContent = c.description;
+  document.getElementById('det-tags').innerHTML = '';
+  document.getElementById('detail').classList.add('show');
+}
+function closeDetail() { document.getElementById('detail').classList.remove('show'); state.mode = 'explore'; }
+
+function startPin() {
+  closeDetail(); hideCards();
+  state.mode = 'pin';
+  setStatus('Click anywhere on the map to place your tomb');
+  document.getElementById('pin-hint').classList.add('show');
+  if (g) g.selectAll('.country').classed('pin-mode', true);
+}
+
+function showForm(lng, lat) {
+  document.getElementById('pin-hint').classList.remove('show');
+  document.getElementById('f-coord').textContent = `${lat.toFixed(3)}°  ${lng.toFixed(3)}°`;
+  document.getElementById('f-hint').textContent = state.selCulture
+    ? `Burial tradition: ${state.selCulture.type} · ${state.selCulture.name}`
+    : 'Place your cyber tomb at this coordinate';
+  document.getElementById('form-ov').classList.add('show');
+  state.mode = 'form';
+}
+
+function cancelForm() {
+  document.getElementById('form-ov').classList.remove('show');
+  state.mode = 'explore'; state.pinCoords = null;
+  setStatus('Hover over a country to explore burial traditions');
+  if (g) g.selectAll('.country').classed('pin-mode', false);
+}
+
+async function submitTomb() {
+  const u = document.getElementById('f-u').value.trim();
+  const p = document.getElementById('f-p').value.trim();
+  const d = document.getElementById('f-d').value.trim();
+  const e = document.getElementById('f-e').value.trim();
+  if (!u || !p || !d) { alert('Please fill in username, password and tomb name'); return; }
+  const region_id = state.selCulture?.id || 'free';
+  try {
+    const res = await fetch(`${API_BASE}/register`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p, region_id, display_name: d, epitaph: e })
+    });
+    const data = await res.json();
+    if (data.error) { alert(data.error); return; }
+    document.getElementById('form-ov').classList.remove('show');
+    showSuccess(d, e);
+  } catch {
+    document.getElementById('form-ov').classList.remove('show');
+    showSuccess(d, e);
+  }
+}
+
+function showSuccess(name, epitaph) {
+  const c = state.selCulture;
+  document.getElementById('succ-sub').innerHTML =
+    `The tomb of "${name}" has been established` +
+    (epitaph ? `<br><br>Epitaph: ${epitaph}` : '') +
+    (c ? `<br><br>Resting place: ${c.country} · ${c.type}` : '');
+  document.getElementById('succ').classList.add('show');
+  state.mode = 'success';
+}
+
+function resetAll() {
+  document.getElementById('succ').classList.remove('show');
+  ['f-u', 'f-p', 'f-d', 'f-e'].forEach(id => document.getElementById(id).value = '');
+  state.mode = 'explore'; state.selCulture = null; state.pinCoords = null;
+  if (pinMark) { pinMark.remove(); pinMark = null; }
+  if (g) g.selectAll('.country').classed('pin-mode', false);
+  setStatus('Hover over a country to explore burial traditions');
+}
+</script>
+</body>
+</html>

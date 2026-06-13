@@ -1,47 +1,142 @@
 [
   {
-    "id": "qinghai-sky",
-    "name": "中国青海 (Qinghai, China)",
-    "coordinates": [96.0786, 35.6526],
-    "type": "天葬 (Sky Burial)",
-    "description": "古老而神圣的藏传佛教仪式。遗体被奉献给自然与秃鹰，象征着灵魂脱离肉体，回归空性与自然的轮回。在赛博世界中，这代表着‘代码彻底开源，数据消散于全网云端’。",
-    "styleTags": ["空灵", "自然", "数据开源", "藏风"],
-    "bgPreset": "rgba(135, 206, 235, 0.1)"
+    "id": "philippines-hanging",
+    "name": "Sagada, Philippines",
+    "iso": "608",
+    "type": "Hanging Coffins",
+    "description": "An ancient tradition of the Igorot people where coffins are suspended from sheer cliff faces. They believe this brings the deceased closer to their ancestral spirits while protecting them from floods and wild animals. In the cyber-world, this represents 'high-level data isolation, mounting core source code on a physically air-gapped cold storage high-altitude base station to protect it from ground-level network virus infections'."
   },
   {
-    "id": "fiji-sea",
-    "name": "斐济海域 (Fiji Sea)",
-    "coordinates": [178.4419, -18.1248],
-    "type": "海葬 (Sea Burial)",
-    "description": "将骨灰撒入广袤无垠的太平洋。水流带走了一切尘世的痕迹，灵魂随洋流周游世界。在赛博世界中，这代表着‘数据融入全球主干网，化作永恒的信息流’。",
-    "styleTags": ["深海", "流体", "赛博洋流", "幽蓝色"],
-    "bgPreset": "rgba(0, 119, 182, 0.15)"
+    "id": "indonesia-toraja",
+    "name": "Tana Toraja, Indonesia",
+    "iso": "360",
+    "type": "Ma'nene & Funeral Rites",
+    "description": "The Toraja people view death as a gradual transition. The deceased are kept and cared for at home for years until a grand funeral is held; every few years, they are exhumed to be cleaned and dressed in new clothes. In the cyber-world, this represents 'ghost thread retention, where even if the main program deems a user deceased, a low-energy pseudo-online state is maintained within the local network for periodic code refactoring and outer appearance rendering'."
   },
   {
-    "id": "norway-tree",
-    "name": "挪威森林 (Norway Forest)",
-    "coordinates": [8.4689, 60.4720],
-    "type": "树葬/绿葬 (Tree Burial)",
-    "description": "将遗体安置在可降解的容器中，埋于树木之下，化作森林的养分。生命以另一种形式在北欧的极光与橡树中延续。在赛博世界中，这代表着‘存入去中心化的绿色服务器，低碳永生’。",
-    "styleTags": ["极光", "北欧", "去中心化", "绿色生态"],
-    "bgPreset": "rgba(46, 139, 87, 0.15)"
-  },
-  {
-    "id": "vatican-catacomb",
-    "name": "梵蒂冈地下 (Vatican City)",
-    "coordinates": [12.4534, 41.9029],
-    "type": "地下圣堂 (Catacomb)",
-    "description": "传统的地下墓穴与壁龛，伴随着圣歌、烛光与古老的拉丁铭文，庄严而神圣。在赛博世界中，这代表着‘被封装入区块链底层‘创世区块’，受最高等级加密算法保护’。",
-    "styleTags": ["哥特", "区块链加密", "神圣", "金黄色"],
-    "bgPreset": "rgba(218, 165, 32, 0.1)"
+    "id": "madagascar-famadihana",
+    "name": "Madagascar",
+    "iso": "450",
+    "type": "Famadihana (Turning of the Bones)",
+    "description": "A famous ritual of 'dancing with the dead'. Relatives periodically exhumed the bodies of ancestors from their tombs, wrap them in fresh silk, and dance joyfully to music to show respect and remembrance. In the cyber-world, this represents 'historical backup activation, where annual memory carnivals are hosted to call up frozen, archived legacy code into high-speed cache memory for full holographic replication'."
   },
   {
     "id": "ghana-fantasy",
-    "name": "加纳阿克拉 (Accra, Ghana)",
-    "coordinates": [-0.1869, 5.6037],
-    "type": "喜丧/幻想棺材 (Fantasy Coffins)",
-    "description": "加纳独特的‘快乐葬礼’。人们会把棺材做成死者生前最爱的东西（如奔驰车、鱼、可乐瓶），在歌舞中庆祝他的一生。在赛博世界中，这代表着‘极致的游戏化定制，全网蹦迪送别’。",
-    "styleTags": ["霓虹高亮", "游戏化", "快乐无厘头", "像素风"],
-    "bgPreset": "rgba(255, 69, 0, 0.15)"
+    "name": "Accra, Ghana",
+    "iso": "288",
+    "type": "Fantasy Coffins",
+    "description": "Ghanaian artisans craft colorful, customized coffins shaped like cars, airplanes, fish, or even soda bottles based on the deceased's profession or lifelong dreams, sending them off in a celebratory atmosphere. In the cyber-world, this represents 'customized shell encapsulation, where the user's final consciousness construct is compiled and packed into a highly personalized digital UI shell based on their lifetime behavioral weights'."
+  },
+  {
+    "id": "india-varanasi",
+    "name": "Varanasi, India",
+    "iso": "356",
+    "type": "Ganges Cremation",
+    "description": "Cremating the body on the banks of the sacred Ganges River in Varanasi and scattering the ashes into the water. Hindus believe this cuts the cycle of reincarnation, achieving direct liberation (Moksha). In the cyber-world, this represents 'complete memory formatting, where all identity markers, hash values, and dependencies are fed into a central high-energy furnace for total data erasure, ensuring they are never instantiated by the system again'."
+  },
+  {
+    "id": "usa-capsule",
+    "name": "United States",
+    "iso": "840",
+    "type": "Space Burial",
+    "description": "A portion of the deceased's cremated ashes is placed into a micro-capsule and launched into Earth orbit, the moon, or deep space via a rocket. In the cyber-world, this represents 'deep space broadcast transmission, turning the core encrypted seed into radio waves and broadcasting it into the endless, unknown universe, searching for a hosting response from extraterrestrial servers'."
+  },
+  {
+    "id": "mexico-muertos",
+    "name": "Mexico",
+    "iso": "484",
+    "type": "Day of the Dead (Día de los Muertos)",
+    "description": "Altars are adorned with marigolds and sugar skulls to guide the souls of the deceased back to the living world for a vibrant family reunion and carnival. In the cyber-world, this represents 'annual limited-time port opening, where the system establishes a temporary two-way gateway through the Dead Sea network layer, allowing terminated accounts to perform brief simulated logins'."
+  },
+  {
+    "id": "south-korea-beads",
+    "name": "South Korea",
+    "iso": "410",
+    "type": "Death Beads",
+    "description": "Due to a severe shortage of burial space, it has become popular in modern South Korea to melt cremated ashes at ultra-high temperatures, transforming them into crystal-clear, colorful glass-like beads to keep at home. In the cyber-world, this represents 'high-density data compression, compressing massive, redundant life logs into an immutable, highly physically protected hardware crystal chip'."
+  },
+  {
+    "id": "italy-capuchin",
+    "name": "Sicily, Italy",
+    "iso": "380",
+    "type": "Capuchin Catacombs Preservation",
+    "description": "The Capuchin Catacombs of Palermo preserve thousands of bodies through dehydration and vinegar washes, hanging them on underground walls dressed in fine clothing. In the cyber-world, this represents 'dead static mirroring, where no code is executed, and only the final visual UI snapshot of the deceased is retained as a read-only static DOM node within a historical museum database'."
+  },
+  {
+    "id": "sweden-promession",
+    "name": "Sweden",
+    "iso": "752",
+    "type": "Promession (Cryomation)",
+    "description": "The body is rapidly frozen and made brittle using liquid nitrogen at -196°C, then shattered into crystalline powder via mechanical vibration, freeze-dried to remove moisture, and buried in soil to become fertilizer. In the cyber-world, this represents 'memory defragmentation and ecological restructuring, where deadlocked code blocks are instantly frozen and pulverized into binary metadata to nourish the root directory of the entire operating system'."
+  },
+  {
+    "id": "usa-capsula-mundi",
+    "name": "Italy / USA",
+    "iso": "840",
+    "type": "Capsula Mundi (Green Burial)",
+    "description": "The body is placed in a fetal position inside a biodegradable, egg-shaped pod and buried, with a tree planted on top that is nourished by the decomposing remains, turning cemeteries into forests. In the cyber-world, this represents 'parent class object inheritance, where the residual computing power of a terminated process is converted into essential nutrients to incubate a brand-new, green AI child-class entity'."
+  },
+  {
+    "id": "japan-nokotsudo",
+    "name": "Tokyo, Japan",
+    "iso": "392",
+    "type": "High-Tech Columbarium (Ruriden)",
+    "description": "An indoor smart cemetery housed in a modern high-rise building. Thousands of LED crystal Buddha statues represent different deceased individuals; when a visitor swipes a card, the corresponding statue lights up, and a robotic arm automatically delivers the urn to the altar. In the cyber-world, this represents 'cloud-based high-concurrency hosting, using a unified LED central matrix for resource routing to dynamically fetch the storage blocks of the deceased via automated pipelines'."
+  },
+  {
+    "id": "tibet-water",
+    "name": "Tibet, China",
+    "iso": "156",
+    "type": "Water Burial",
+    "description": "A traditional Tibetan practice reserved for specific cases, such as infants or the impoverished, where the body is dismantled and cast into rushing rivers to feed the fish. In the cyber-world, this represents 'decentralized data stream injection, shattering all records into scattered, discontinuous data packets and merging them into high-speed fiber-optic data streams to flow without a traceable origin'."
+  },
+  {
+    "id": "usa-reef",
+    "name": "Florida, USA",
+    "iso": "840",
+    "type": "Eternal Reefs (Marine Burial)",
+    "description": "Cremated ashes are mixed with eco-friendly concrete to cast perforated artificial reef balls that are placed on the ocean floor, providing a habitat for marine life and restoring ecosystems. In the cyber-world, this represents 'underlying hardware capacity expansion, merging decommissioned server wreckage with legacy logs to construct physical armor for submarine fiber-optic cables, forming the bedrock of a new network ecology'."
+  },
+  {
+    "id": "egypt-mummy",
+    "name": "Ancient Egypt",
+    "iso": "818",
+    "type": "Mummification & Pyramids",
+    "description": "The physical body is preserved through intricate evisceration, salting, spicing, and linen wrapping, then housed in grand pyramids with the expectation that the soul (Ka) will one day return to reanimate it. In the cyber-world, this represents 'eternal physical archiving, utilizing the highest hardware specifications to fight entropy, perfectly sealing the core code and UI to await reawakening by future supercomputing power'."
+  },
+  {
+    "id": "mongolia-steppe",
+    "name": "Mongolia",
+    "iso": "496",
+    "type": "Open-air Burial",
+    "description": "An ancient nomadic tradition where the body is placed on a cart and driven across the steppe until it jolts off. The spot where it falls becomes its resting place, left to dissolve into the elements and wildlife without leaving a trace. In the cyber-world, this represents 'random packet dropping, releasing data haphazardly across a vast, dynamic network to be randomly consumed by system hosts or wild scrapers, leaving no footprint on the original server'."
+  },
+  {
+    "id": "australia-aboriginal",
+    "name": "Australia",
+    "iso": "036",
+    "type": "Indigenous Platform Burial",
+    "description": "Certain Indigenous Australian groups place the body on an elevated wooden platform covered in branches. After the elements decompose the flesh, relatives return to collect the clean white bones for a secondary burial. In the cyber-world, this represents 'multi-tiered data scrubbing, first stripping away non-core temporary cache files at high-altitude nodes, and finally recovering only the clean, unsigned primary keys to be stored in the core archive database'."
+  },
+  {
+    "id": "china-coffin-boat",
+    "name": "Three Gorges, China",
+    "iso": "156",
+    "type": "Boat-shaped Hanging Coffins",
+    "description": "The ancient Bo or Baiyue people placed boat-shaped coffins inside caves or rock crevices on sheer cliffs overlooking rivers. Water represents the path to the afterlife, and the boat is the vessel. In the cyber-world, this represents 'isolated sandbox encapsulation, packaging an entire lifetime trajectory into a closed-loop \"Data Ark\" (boat coffin) and stranding it permanently on the dark edges of the network, far from the mainstream grid'."
+  },
+  {
+    "id": "uk-resomation",
+    "name": "United Kingdom",
+    "iso": "826",
+    "type": "Resomation (Alkaline Hydrolysis)",
+    "description": "A modern green burial technology. The body is placed in a pressurized vessel with a mixture of potassium hydroxide and water under high heat, dissolving the flesh into a sterile liquid within hours and leaving only bone fragments. In the cyber-world, this represents 'high-intensity chemical degradation, using aggressive system cleaners to forcibly de-protonate and dissolve user configuration files, achieving zero-carbon, highly efficient physical account termination'."
+  },
+  {
+    "id": "usa-diamond",
+    "name": "United States / Switzerland",
+    "iso": "756",
+    "type": "Memorial Diamonds",
+    "description": "Carbon is extracted from cremated ashes and transformed in a laboratory under conditions that mimic the extreme heat and pressure deep within the Earth, creating a genuine diamond for loved ones to wear. In the cyber-world, this represents 'ultimate encrypted single-crystal refinement, purifying gigabytes of chaotic lifetime logs into an irreversible, physically aesthetic golden cryptographic hash crystal'."
   }
 ]

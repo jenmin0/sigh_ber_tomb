@@ -1,4 +1,3 @@
-# init_db.py
 import sqlite3
 import json
 import hashlib
@@ -6,16 +5,19 @@ import os
 
 DB_PATH = "cybertomb.db"
 JSON_PATH = "src/data/burial_data.json"
+
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
+    # 1. 升级 regions 表结构，用 area_ 字段组替代原本的单点经纬度
     c.executescript("""
     CREATE TABLE IF NOT EXISTS regions (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
-        coordinates_lng REAL,
-        coordinates_lat REAL,
+        area_center_lng REAL NOT NULL,   -- 区域中心经度
+        area_center_lat REAL NOT NULL,   -- 区域中心纬度
+        area_radius INTEGER DEFAULT 20000, -- 区域辐射半径（米）
         burial_type TEXT NOT NULL,
         description TEXT,
         style_tags TEXT,        -- JSON array存成字符串
@@ -68,28 +70,35 @@ def init_db():
     );
     """)
 
-    # 把你们的地图json直接塞进regions表
+# 把你们的地图json直接塞进regions表
     if os.path.exists(JSON_PATH):
-            with open(JSON_PATH, "r", encoding="utf-8") as f:
-                regions = json.load(f)
+        with open(JSON_PATH, "r", encoding="utf-8") as f:
+            regions = json.load(f)
 
-    for r in regions:
-        c.execute("""
-            INSERT OR REPLACE INTO regions 
-            (id, name, coordinates_lng, coordinates_lat, burial_type, description, style_tags, bg_preset)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            r["id"],
-            r["name"],
-            r["coordinates"][0],   # lng
-            r["coordinates"][1],   # lat
-            r["type"],
-            r["description"],
-            json.dumps(r["styleTags"], ensure_ascii=False),
-            r["bgPreset"]
-        ))
+        for r in regions:
+            # 1. 安全解析 area 字典
+            area_obj = r.get("area", {})
+            center = area_obj.get("center", [0.0, 0.0]) # 默认 0.0, 0.0
+            radius = area_obj.get("radius", 20000)      # 默认 20 公里
 
-    # 几个测试用的初始物品
+            # 2. 安全提取字段，并使用 .get() 提供赛博朋克风格的默认兜底值
+            c.execute("""
+                INSERT OR REPLACE INTO regions 
+                (id, name, area_center_lng, area_center_lat, area_radius, burial_type, description, style_tags, bg_preset)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                r["id"],
+                r["name"],
+                center[0],   # lng
+                center[1],   # lat
+                radius,      # 散开半径
+                r.get("type", "数字墓园 (Digital Necropolis)"), # 如果没有 type，用它兜底
+                r.get("description", "数据传输链路畅通，冷存储矩阵待命中。"),
+                json.dumps(r.get("styleTags", []), ensure_ascii=False),
+                r.get("bgPreset", "rgba(0, 128, 128, 0.15)")
+            ))
+
+    # 3. 几个测试用的初始物品
     starter_items = [
         ("赛博莲花", "空灵的数字莲花，来自天葬之地", 2, None),
         ("像素蜡烛", "普通的悼念蜡烛", 1, None),

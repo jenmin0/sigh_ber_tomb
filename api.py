@@ -2,8 +2,10 @@ import random
 import httpx
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
+import json
+from pathlib import Path
 
 # 确保你的 mock 或 db 导入正常。为了让你能直接跑通，这里用你提供的数据做基础
 from src.db import (
@@ -34,6 +36,12 @@ FLAG_MAP = {
     "vatican-catacomb": "⛪",
     "ghana-fantasy": "🎊",
 }
+
+@app.get("/burial-cultures")
+def burial_cultures():
+    path = Path("src/data/burial_data.json")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return JSONResponse(data)
 
 @app.get("/regions")
 def regions():
@@ -192,7 +200,7 @@ async def chat_with_soul(
 def get_main_page():
     # 读取你之前编写的那份拥有炫酷 CSS 侧边栏和 Google Maps 3D 的 HTML 文件
     try:
-        with open("cybernecropolis_5.html", "r", encoding="utf-8") as f:
+        with open("index.html", "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
         return "<h3>请将你前端的 HTML 代码保存为同级目录下的 index.html 文件</h3>"
