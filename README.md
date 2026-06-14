@@ -27,6 +27,12 @@ Each user registers by selecting a burial tradition (sky burial in Qinghai, fant
 - **Steal Items** — Attempt to take items from other tombs. Success rate depends on item rarity, tomb guardian level, and your soul reputation. Failure has consequences
 - **Vote for proposals** — Community proposals to build tombs for public figures
 
+### 🐞 Bugs to Fix
+
+- Users who register before creating a tomb are currently unable to create one afterward
+- Unregistered visitors can currently leave gifts to other users' tombs
+- Failure to Pin/Locate Tombs for Approved Proposals on Main Map
+- Proposal Persistence Post-Voting
 
 ### 🚧 Not Yet Implemented
 
