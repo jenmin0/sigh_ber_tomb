@@ -34,10 +34,6 @@ Each user registers by selecting a burial tradition (sky burial in Qinghai, fant
 - Failure to Pin/Locate Tombs for Approved Proposals on Main Map
 - Proposal Persistence Post-Voting
 
-### 🐞 Bugs to Fix
-
-- Users who register before creating a tomb are currently unable to create one afterward
-- Unregistered visitors can currently leave gifts to other users' tombs
 
 ### 🚧 Not Yet Implemented
 
