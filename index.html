@@ -47,6 +47,7 @@ body{display:flex;flex-direction:column;font-family:var(--font)}
 .tb-sub{font-size:var(--b2);color:var(--muted);letter-spacing:.04em}
 #status{font-size:var(--b2);color:var(--muted);margin-left:auto;letter-spacing:.04em}
 
+
 /* Right side auth/profile zone */
 #auth-zone{
   display:flex;align-items:center;gap:12px;margin-left:16px;
@@ -131,6 +132,54 @@ body{display:flex;flex-direction:column;font-family:var(--font)}
 .card-name{font-size:var(--b1);font-weight:700;color:var(--text);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-desc{font-size:var(--b2);color:var(--text2);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
+/* ---- Community Bulletin Styles ---- */
+#bulletin-icon {
+  background: var(--s1); color: var(--gold); border: 1px solid rgba(212,175,55,.4);
+  padding: 6px 12px; font-size: var(--b2); border-radius: 4px; cursor: pointer; font-family: var(--font);
+  display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+}
+#bulletin-icon:hover { background: rgba(212,175,55,.1); box-shadow: 0 0 8px rgba(212,175,55,.3); }
+
+#bulletin-ov {
+  position: absolute; inset: 0; background: rgba(26, 35, 39, 0.95);
+  display: none; flex-direction: column; z-index: 40; padding: 24px;
+}
+#bulletin-ov.show { display: flex; }
+
+.bulletin-layout {
+  display: flex; flex-direction: column; width: 100%; max-width: 650px; margin: 0 auto; height: 100%; gap: 16px;
+}
+.proposal-list {
+  flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 4px;
+}
+.proposal-item {
+  background: var(--s2); border: 1px solid var(--bd); border-radius: 8px; padding: 16px;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+}
+.proposal-main { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.proposal-meta { font-size: var(--b2); color: var(--muted); letter-spacing: .04em; }
+.proposal-text { font-size: var(--b1); color: var(--text); line-height: 1.5; }
+.proposal-text strong { color: var(--gold2); }
+
+.proposal-actions { display: flex; flex-col; gap: 6px; flex-shrink: 0; width: 110px; }
+.p-btn {
+  width: 100%; padding: 6px; font-family: var(--font); font-size: var(--b2); font-weight: 700;
+  border: 1px solid var(--bd); border-radius: 4px; cursor: pointer; background: transparent; text-align: center;
+}
+.p-btn.approve { color: #8da399; border-color: rgba(141,163,153,0.4); }
+.p-btn.approve:hover { background: rgba(141,163,153,0.1); }
+.p-btn.reject { color: #b88d8b; border-color: rgba(184,141,139,0.4); }
+.p-btn.reject:hover { background: rgba(184,141,139,0.1); }
+.p-btn.more { color: var(--text2); }
+.p-btn.more:hover { border-color: var(--text2); }
+
+/* Create Form Drawer Inside Modal */
+#bulletin-form-drawer {
+  display: none; flex-direction: column; gap: 12px; background: var(--s1);
+  border: 1px solid var(--gold); border-radius: 8px; padding: 16px; margin-top: auto;
+}
+#bulletin-form-drawer.show { display: flex; }
+
 /* Reusable components */
 #detail, #form-ov, #succ, #login-ov {
   position:absolute;inset:0;
@@ -211,7 +260,7 @@ body{display:flex;flex-direction:column;font-family:var(--font)}
     <span class="tb-t">Cyber Cemetery</span>
     <span class="tb-sub">— World Burial Culture Map —</span>
     <span id="status">Loading map...</span>
-    
+    <button id="bulletin-icon" onclick="openBulletin()">📜 Community</button>
     <div id="auth-zone">
       <button id="login-trigger-btn" class="auth-btn" onclick="openLoginOverlay()">Login</button>
     <div id="user-profile">
@@ -230,6 +279,44 @@ body{display:flex;flex-direction:column;font-family:var(--font)}
         <div class="ph-b">Click anywhere on the map<br>to place your tomb at this coordinate</div>
       </div>
       
+      <div id="bulletin-ov">
+        <div class="bulletin-layout">
+          <span class="det-close" onclick="closeBulletin()">✕ Close Board</span>
+          <div class="fo-title">Community Consensus Board</div>
+          
+          <div class="proposal-list" id="proposal-container">
+            <div class="proposal-item">
+              <div class="proposal-main">
+                <div class="proposal-meta">PROP-01 // PROPOSED BY: ADMINISTRATOR</div>
+                <div class="proposal-text">Propose to establish a digital mausoleum for <strong>“Satoshi Nakamoto”</strong>.</div>
+                <div class="coord-badge" style="align-self: flex-start; margin-top: 4px;">📍 GPS: [ 0.000, 0.000 ] (Space Void)</div>
+              </div>
+              <div class="proposal-actions">
+                <button class="p-btn approve" onclick="alert('Voting successful! Approval vote recorded.')">👍 Approve</button>
+                <button class="p-btn reject" onclick="alert('Voting successful! Rejection vote recorded.')">👎 Reject</button>
+                <button class="p-btn more" onclick="alert('【Details】\nAuthor of the Bitcoin whitepaper, a pioneer of decentralized concepts. Disappeared into the digital wasteland in 2011. The community proposes to establish an eternal beacon for them in Earth's synchronous orbit.')">Learn More</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="bulletin-form-drawer">
+            <div class="fl" style="color:var(--gold); margin-bottom:4px;">New Proposal</div>
+            <div class="fg" style="max-width:100%;"><div class="fl">Target Name</div><input class="fi" id="bp-name" placeholder="i.e., Alpha"></div>
+            <div class="fg" style="max-width:100%;"><div class="fl">Description (Learn More)</div><input class="fi" id="bp-desc" placeholder="Write why the entire community should establish a mausoleum for them..."></div>
+            <div class="frow" style="max-width:100%; margin-top:4px;">
+              <div class="coord-badge" id="bp-coord-display" style="flex:1; text-align:center; padding:10px;">📍 Coordinates: Click Map to Select</div>
+              <button class="fbtn p" onclick="startBulletinMapPick()">Select on Map</button>
+            </div>
+            <div class="frow" style="max-width:100%; margin-top:8px;">
+              <button class="fbtn c" onclick="toggleBulletinDrawer(false)">Cancel</button>
+              <button class="fbtn p" onclick="submitBulletinProposal()">Submit to DAO →</button>
+            </div>
+          </div>
+
+          <button class="det-btn" id="bp-trigger-btn" style="align-self: flex-end; margin-top: 0;" onclick="toggleBulletinDrawer(true)">+ Initiate Proposal</button>
+        </div>
+      </div>
+
       <div id="detail">
         <span class="det-close" onclick="closeDetail()">✕ Close</span>
         <div class="det-type" id="det-type"></div>
@@ -351,7 +438,15 @@ let CULTURES = [];
 let CULTURE_ISO = new Set();
 let ISO_CULTURES = {};
 let tombMarks = [];
-let state = { mode: 'explore', hoveredIso: null, selCulture: null, pinCoords: null, hoveredCountryName: '', isLocked: false };
+let state = { 
+  mode: 'explore', // 'explore', 'pin', 'login', 'form', 'detail', 'success', 'bulletin', 'bulletin-pick'
+  hoveredIso: null, 
+  selCulture: null, 
+  pinCoords: null, 
+  hoveredCountryName: '', 
+  isLocked: false 
+};
+let bulletinPickCoords = null; // Used to temporarily store the coordinates where the community bulletin is clicked on the map
 let currentTomb = null;
 let tombShape = 'arch';
 let tombColor = '#c9a874';
@@ -743,12 +838,25 @@ loadCultures().then(() => {
         hideTip();
       });
 
-    svg.on('click', function (event) {
+svg.on('click', function (event) {
       event.stopPropagation();
       const [svgX, svgY] = d3.pointer(event, svg.node());
       const coords = projection.invert([svgX, svgY]);
       if (!coords) return;
 
+      // Branch 1: If we're in the middle of picking a location for the community bulletin, we want to lock in the GPS coordinates, show the pin, and then open the bulletin form
+      if (state.mode === 'bulletin-pick') {
+        bulletinPickCoords = { lng: coords[0], lat: coords[1] };
+        drawPin(coords[0], coords[1]); // 复用你的大墓碑 Pin 渲染渲染函数
+        
+        // Remove the hint and update the status to show the locked coordinates
+        document.getElementById('pin-hint').classList.remove('show');
+        document.getElementById('bp-coord-display').textContent = `📍 GPS Locked: [${coords[1].toFixed(3)}, ${coords[0].toFixed(3)}]`;
+        openBulletin();
+        return;
+      }
+
+      // Branch 2: Handle the registration location selection (Pin mode) - lock the coordinates, show the pin, and open the registration form
       if (state.mode === 'pin') {
         state.pinCoords = { lng: coords[0], lat: coords[1] };
         drawPin(coords[0], coords[1]);
@@ -756,6 +864,7 @@ loadCultures().then(() => {
         return;
       }
 
+      // Branch 3: The original country/ocean exploration card mode - only show cards if we're in explore mode and not already locked into a country
       if (state.mode === 'explore') {
         const target = event.target;
         if (target.classList.contains('country')) {
@@ -767,7 +876,6 @@ loadCultures().then(() => {
         }
       }
     });
-
     syncAuthUI();
     setStatus('Hover over a country to explore burial traditions');
     loadAndRenderTombs();
@@ -893,6 +1001,79 @@ function resetAll() {
   if (g) g.selectAll('.country').classed('pin-mode', false);
   setStatus('Hover over a country to explore burial traditions');
 }
+
+// ================= Community Bulletin Core Business Logic =================
+function openBulletin() {
+  document.getElementById('bulletin-ov').classList.add('show');
+  state.mode = 'bulletin';
+}
+
+function closeBulletin() {
+  document.getElementById('bulletin-ov').classList.remove('show');
+  if (state.mode === 'bulletin') state.mode = 'explore';
+}
+
+function toggleBulletinDrawer(show) {
+  const drawer = document.getElementById('bulletin-form-drawer');
+  const triggerBtn = document.getElementById('bp-trigger-btn');
+  if (show) {
+    drawer.classList.add('show');
+    triggerBtn.style.display = 'none';
+  } else {
+    drawer.classList.remove('show');
+    triggerBtn.style.display = 'block';
+    bulletinPickCoords = null;
+    document.getElementById('bp-coord-display').textContent = "📍 Coordinates: Click Map to Select";
+  }
+}
+
+// Enter map location selection mode for the community bulletin proposal, which is a slightly different flow from the tomb registration pin mode
+function startBulletinMapPick() {
+  closeBulletin(); // Temporarily hide the bulletin, allowing the user to see the map for clicking
+  state.mode = 'bulletin-pick';
+  setStatus('BULLETIN MODE: Click anywhere on the map to anchor the proposed tomb');
+  
+  // Borrow your existing location selection UI to provide visual feedback
+  document.getElementById('pin-hint').classList.add('show');
+  document.querySelector('#pin-hint .ph-t').textContent = "Locating Community Monument";
+  document.querySelector('#pin-hint .ph-b').textContent = "Click to set the historical coordinates for this proposal";
+}
+
+// Submit new proposal and dynamically render it to the list
+function submitBulletinProposal() {
+  const name = document.getElementById('bp-name').value.trim();
+  const desc = document.getElementById('bp-desc').value.trim();
+  
+  if (!name || !desc) { alert('Please enter target name and description.'); return; }
+  if (!bulletinPickCoords) { alert('Please click "Select on Map" to pick coordinates first.'); return; }
+  
+  const container = document.getElementById('proposal-container');
+  const propId = "PROP-" + (container.children.length + 1);
+  
+  const newItem = document.createElement('div');
+  newItem.className = 'proposal-item';
+  newItem.innerHTML = `
+    <div class="proposal-main">
+      <div class="proposal-meta">${propId} // PROPOSED BY: REBEL_NODE</div>
+      <div class="proposal-text">Propose to establish a digital mausoleum for <strong>“${name}”</strong>.</div>
+      <div class="coord-badge" style="align-self: flex-start; margin-top: 4px;">📍 GPS: [ ${bulletinPickCoords.lat.toFixed(3)}, ${bulletinPickCoords.lng.toFixed(3)} ]</div>
+    </div>
+    <div class="proposal-actions">
+      <button class="p-btn approve" onclick="alert('Voted successfully!')">👍 Approve</button>
+      <button class="p-btn reject" onclick="alert('Voted successfully!')">👎 Reject</button>
+      <button class="p-btn more" onclick="alert('[Learn More]\\n${desc}')">Learn More</button>
+    </div>
+  `;
+  
+  container.appendChild(newItem);
+  
+  // Empty the form and close the drawer for better UX after submission
+  document.getElementById('bp-name').value = '';
+  document.getElementById('bp-desc').value = '';
+  toggleBulletinDrawer(false);
+  alert('Proposal successfully broadcasted to the network!');
+}
+
 </script>
 </body>
 </html>

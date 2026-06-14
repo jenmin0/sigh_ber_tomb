@@ -25,6 +25,14 @@ Each user registers by selecting a burial tradition (sky burial in Qinghai, fant
 - **AI-Generated Offerings** — Describe any object; Fal generates a low-poly illustration and places it in your tomb space
 - **Leave Gifts** — Visit another user's tomb and leave an offering
 - **Steal Items** — Attempt to take items from other tombs. Success rate depends on item rarity, tomb guardian level, and your soul reputation. Failure has consequences
+- **Vote for proposals** — Community proposals to build tombs for public figures
+
+### 🐞 Bugs to Fix
+
+- Users who register before creating a tomb are currently unable to create one afterward
+- Unregistered visitors can currently leave gifts to other users' tombs
+- Failure to Pin/Locate Tombs for Approved Proposals on Main Map
+- Proposal Persistence Post-Voting
 
 ### 🐞 Bugs to Fix
 
@@ -35,7 +43,6 @@ Each user registers by selecting a burial tradition (sky burial in Qinghai, fant
 
 - Visitor messages / guestbook
 - Cyber ghost replies via Google DeepMind (Gemini) — the tomb owner's digital remnant responding to visitors
-- Community proposals to build tombs for public figures (requires voting threshold)
 - Item/gift economy with actual user balance tracking
 
 ---
@@ -133,7 +140,7 @@ Open `index.html` directly in your browser (double-click or drag into Chrome/Fir
 ## Project Structure
 
 ```
-sigh_ber_graveyard/
+sigh_ber_tomb/
 ├── api.py                  # FastAPI app and all routes
 ├── index.html              # Frontend (map, tomb space, all UI)
 ├── requirements.txt
