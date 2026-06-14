@@ -26,6 +26,11 @@ Each user registers by selecting a burial tradition (sky burial in Qinghai, fant
 - **Leave Gifts** — Visit another user's tomb and leave an offering
 - **Steal Items** — Attempt to take items from other tombs. Success rate depends on item rarity, tomb guardian level, and your soul reputation. Failure has consequences
 
+### 🐞 Bugs to Fix
+
+- Users who register before creating a tomb are currently unable to create one afterward
+- Unregistered visitors can currently leave gifts to other users' tombs
+
 ### 🚧 Not Yet Implemented
 
 - Visitor messages / guestbook
@@ -53,7 +58,7 @@ Each user registers by selecting a burial tradition (sky burial in Qinghai, fant
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/jenmin0/sigh_ber_tomb.git
 cd sigh_ber_tomb
 ```
 
