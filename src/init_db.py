@@ -2,7 +2,7 @@ import sqlite3
 import json
 import hashlib
 import os
-
+from seed_demo_tombs import seed
 DB_PATH = "cybertomb.db"
 JSON_PATH = "src/data/burial_data.json"
 
@@ -15,7 +15,7 @@ def init_db():
 
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
         soul_reputation INTEGER DEFAULT 100,
         is_thief INTEGER DEFAULT 0,
@@ -64,13 +64,13 @@ def init_db():
                     
     CREATE TABLE IF NOT EXISTS tomb_proposals (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        proposed_by INTEGER REFERENCES users(id),  -- 发起人
-        subject_name TEXT NOT NULL,                -- 被立碑者姓名
-        subject_bio TEXT,                          -- 简介
-        vote_count INTEGER DEFAULT 0,             -- 当前票数
-        vote_threshold INTEGER DEFAULT 10,        -- 通过需要的票数
+        proposed_by INTEGER REFERENCES users(id),  -- ID of the user who proposed
+        subject_name TEXT NOT NULL,                -- Name of the person to be memorialized
+        subject_bio TEXT,                          -- Biography
+        vote_count INTEGER DEFAULT 0,             -- Current vote count
+        vote_threshold INTEGER DEFAULT 10,        -- Votes required for approval
         status TEXT DEFAULT 'voting',             -- voting / approved / rejected
-        tomb_id INTEGER REFERENCES tombs(id),     -- 通过后创建的墓碑
+        tomb_id INTEGER REFERENCES tombs(id),     -- Tomb created after approval
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -79,18 +79,19 @@ CREATE TABLE IF NOT EXISTS proposal_votes (
     proposal_id INTEGER REFERENCES tomb_proposals(id),
     voter_id INTEGER REFERENCES users(id),
     voted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(proposal_id, voter_id)              -- 每人只能投一票
+    UNIQUE(proposal_id, voter_id)              -- Each user can only vote once
 );
     """)
 
 
-    # 3. 几个测试用的初始物品
+    # 3. Initialize items from JSON
     starter_items = [
-        ("赛博莲花", "空灵的数字莲花，来自天葬之地", 2, None),
-        ("像素蜡烛", "普通的悼念蜡烛", 1, None),
-        ("加密钥匙", "稀有物品，可提升墓碑守护等级", 4, None),
-        ("幽灵代码", "神秘的代码碎片", 3, None),
-        ("极光碎片", "来自挪威森林的稀有物品", 5, None),
+        ("cyber lotus", "Ethereal digital lotus, from the realm of digital burial", 2, None),
+        ("pixel candle", "Ordinary memorial candle", 1, None),
+        ("encryption key", "Rare item that can enhance tomb guardian level", 4, None),
+        ("ghost code", "Mysterious code fragment", 3, None),
+        ("aurora fragment", "Rare item from the Norwegian forests", 5, None),
+
     ]
     c.executemany(
         "INSERT OR IGNORE INTO items (name, description, rarity) VALUES (?, ?, ?)",
@@ -100,6 +101,7 @@ CREATE TABLE IF NOT EXISTS proposal_votes (
     conn.commit()
     conn.close()
     print("DB initialized.")
+    seed()
 
 if __name__ == "__main__":
     init_db()
